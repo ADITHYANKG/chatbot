@@ -1,0 +1,26 @@
+.env
+.env.*
+!.env.example
+
+.venv/
+.venv313/
+venv/
+__pycache__/
+*.py[cod]
+
+# Local runtime/generated artifacts
+uploads/
+database.db
+backend/app/uploads/
+backend/app/database.db
+mcp_use.egg-info/
+*.sqlite3
+
+# Frontend artifacts
+**/node_modules/
+**/build/
+**/coverage/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db

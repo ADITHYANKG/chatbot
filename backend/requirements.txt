@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+sqlalchemy
+pdfplumber
+pandas
+pdf2image
+pytesseract
+requests
+python-jose
+python-multipart
+pycryptodome
+python-dotenv
+

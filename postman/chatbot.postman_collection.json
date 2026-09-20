@@ -1,0 +1,192 @@
+{
+  "info": {
+    "name": "chatbot",
+    "description": "Postman collection for the FastAPI chatbot backend.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8001" },
+    { "key": "token", "value": "" },
+    { "key": "username", "value": "postman_user" },
+    { "key": "password", "value": "PostmanPassword123!" },
+    { "key": "file_id", "value": "1" },
+    { "key": "session_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Root",
+          "request": { "method": "GET", "header": [], "url": "{{base_url}}/" }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/x-www-form-urlencoded" }],
+            "body": { "mode": "urlencoded", "urlencoded": [
+              { "key": "username", "value": "{{username}}", "type": "text" },
+              { "key": "password", "value": "{{password}}", "type": "text" }
+            ]},
+            "url": "{{base_url}}/register/"
+          }
+        },
+        {
+          "name": "Login",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Login succeeded', function () { pm.response.to.have.status(200); });",
+            "const json = pm.response.json();",
+            "if (json.access_token) pm.collectionVariables.set('token', json.access_token);"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/x-www-form-urlencoded" }],
+            "body": { "mode": "urlencoded", "urlencoded": [
+              { "key": "username", "value": "{{username}}", "type": "text" },
+              { "key": "password", "value": "{{password}}", "type": "text" }
+            ]},
+            "url": "{{base_url}}/login/"
+          }
+        },
+        {
+          "name": "Current User",
+          "request": { "method": "GET", "header": [], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "url": "{{base_url}}/user/" }
+        },
+        {
+          "name": "Current User ID",
+          "request": { "method": "GET", "header": [], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "url": "{{base_url}}/user-id/" }
+        },
+        {
+          "name": "List Users",
+          "request": { "method": "GET", "header": [], "url": "{{base_url}}/users/" }
+        }
+      ]
+    },
+    {
+      "name": "Files",
+      "item": [
+        {
+          "name": "Upload File",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Upload succeeded', function () { pm.response.to.have.status(200); });",
+            "const json = pm.response.json();",
+            "if (json.file_id) pm.collectionVariables.set('file_id', String(json.file_id));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "body": { "mode": "formdata", "formdata": [
+              { "key": "file", "type": "file", "src": "" }
+            ]},
+            "url": "{{base_url}}/upload/"
+          }
+        },
+        {
+          "name": "List My Files",
+          "request": { "method": "GET", "header": [], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "url": "{{base_url}}/files/" }
+        },
+        {
+          "name": "Get File Content",
+          "request": { "method": "GET", "header": [], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "url": "{{base_url}}/files/{{file_id}}" }
+        },
+        {
+          "name": "Get File Chat History",
+          "request": { "method": "GET", "header": [], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "url": "{{base_url}}/chats/{{file_id}}" }
+        },
+        {
+          "name": "Ask About File",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "body": { "mode": "raw", "raw": "{\n  \"query\": \"Summarize this file\",\n  \"file_id\": \"{{file_id}}\",\n  \"mode\": \"file\"\n}" },
+            "url": "{{base_url}}/query/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI Modes",
+      "item": [
+        {
+          "name": "Image Prompt",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "body": { "mode": "raw", "raw": "{\n  \"prompt\": \"A futuristic city\",\n  \"mode\": \"image\"\n}" },
+            "url": "{{base_url}}/query/"
+          }
+        },
+        {
+          "name": "Database AI Query",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "body": { "mode": "raw", "raw": "{\n  \"query\": \"Explain how customer databases are structured\",\n  \"mode\": \"database\",\n  \"session_id\": \"postman-session\",\n  \"database\": \"demo_database\"\n}" },
+            "url": "{{base_url}}/query/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Database",
+      "item": [
+        {
+          "name": "Fetch Database Names",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "body": { "mode": "raw", "raw": "{\n  \"db_config\": {\n    \"MYSQL_HOST\": \"localhost\",\n    \"MYSQL_PORT\": \"3306\",\n    \"MYSQL_USER\": \"root\",\n    \"MYSQL_PASSWORD\": \"your_password\",\n    \"MYSQL_DATABASE\": \"demo_database\"\n  },\n  \"fetch_mode\": true\n}" },
+            "url": "{{base_url}}/connect/"
+          }
+        },
+        {
+          "name": "Connect Database",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Connection succeeded', function () { pm.response.to.have.status(200); });",
+            "const json = pm.response.json();",
+            "if (json.session_id) pm.collectionVariables.set('session_id', json.session_id);"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "body": { "mode": "raw", "raw": "{\n  \"db_config\": {\n    \"MYSQL_HOST\": \"localhost\",\n    \"MYSQL_PORT\": \"3306\",\n    \"MYSQL_USER\": \"root\",\n    \"MYSQL_PASSWORD\": \"your_password\",\n    \"MYSQL_DATABASE\": \"demo_database\"\n  }\n}" },
+            "url": "{{base_url}}/connect/"
+          }
+        },
+        {
+          "name": "Disconnect Database",
+          "request": { "method": "POST", "header": [], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "url": "{{base_url}}/disconnect/" }
+        },
+        {
+          "name": "Database Session List",
+          "request": { "method": "GET", "header": [], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "url": "{{base_url}}/db-history" }
+        },
+        {
+          "name": "Database Session Details",
+          "request": { "method": "GET", "header": [], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "url": "{{base_url}}/db-history/{{session_id}}" }
+        }
+      ]
+    },
+    {
+      "name": "Image History",
+      "item": [
+        {
+          "name": "List Image Prompts",
+          "request": { "method": "GET", "header": [], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "url": "{{base_url}}/image-prompts" }
+        }
+      ]
+    }
+  ]
+}

@@ -60,7 +60,7 @@ export default function ChatBox({ selectedFile, chatHistory, setChatHistory, onF
     <div className="chat-panel ">
       <div className="flex-grow-1  overflow-auto">
         {chatHistory.length === 0 ? (
-          <p className=" text-center">Select a file and start chatting...</p>
+          <p className=" text-center">Select a file and start chatting ente mone...</p>
         ) : (
           chatHistory.map((msg, index) => (
             <div key={index} className={`chat-bubble ${msg.role}`}>

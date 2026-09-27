@@ -101,7 +101,6 @@ jobs:
             set -e
 
             echo "Deploying frontend..."
-
             rm -rf /var/www/chatbot/*
             cp -r /home/ubuntu/deploy/frontend/. /var/www/chatbot/
 

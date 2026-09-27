@@ -1,0 +1,51 @@
+name: Deploy Chatbot to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script_stop: true
+          script: |
+            set -e
+
+            echo "=== Starting deployment ==="
+
+            cd /home/ubuntu/chatbot
+
+            echo "1. Updating source code"
+            git fetch origin main
+            git reset --hard origin/main
+
+            echo "2. Installing backend dependencies"
+            cd backend
+            .venv/bin/pip install -r requirements.txt
+
+            echo "3. Restarting FastAPI"
+            sudo systemctl restart chatbot-api.service
+            sudo systemctl is-active chatbot-api.service
+
+            echo "4. Building React frontend"
+            cd /home/ubuntu/chatbot/frontend/ai-chat-ui
+            npm ci
+            npm run build
+
+            echo "5. Deploying frontend"
+            rm -rf /var/www/chatbot/*
+            cp -r build/. /var/www/chatbot/
+
+            echo "6. Checking Nginx"
+            sudo nginx -t
+
+            echo "=== Deployment successful ==="

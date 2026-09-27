@@ -82,7 +82,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
 
           source: "frontend/ai-chat-ui/build/*"
-          target: "/var/www/chatbot"
+          target: "/home/ubuntu/deploy/frontend"
           strip_components: 3
 
 
@@ -90,7 +90,7 @@ jobs:
       # Verify Nginx
       # -------------------------
 
-      - name: Verify deployment
+      - name: Deploy and verify
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -100,8 +100,18 @@ jobs:
           script: |
             set -e
 
+            echo "Deploying frontend..."
+
+            find /var/www/chatbot -mindepth 1 -maxdepth 1 -delete
+            cp -r /home/ubuntu/deploy/frontend/. /var/www/chatbot/
+
+            echo "Checking Nginx..."
             sudo nginx -t
 
+            echo "Checking FastAPI..."
             sudo systemctl is-active chatbot-api.service
+
+            echo "Cleaning staging directory..."
+            rm -rf /home/ubuntu/deploy/frontend/*
 
             echo "Deployment completed successfully"

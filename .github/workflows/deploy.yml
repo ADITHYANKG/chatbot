@@ -102,7 +102,7 @@ jobs:
 
             echo "Deploying frontend..."
 
-            find /var/www/chatbot -mindepth 1 -maxdepth 1 -delete
+            rm -rf /var/www/chatbot/*
             cp -r /home/ubuntu/deploy/frontend/. /var/www/chatbot/
 
             echo "Checking Nginx..."

@@ -10,42 +10,94 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy to EC2
+
+      # -------------------------
+      # CI - Build React
+      # -------------------------
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/ai-chat-ui/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend/ai-chat-ui
+        run: npm ci
+
+      - name: Build React frontend
+        working-directory: frontend/ai-chat-ui
+        run: npm run build
+
+
+      # -------------------------
+      # CD - Deploy backend
+      # -------------------------
+
+      - name: Deploy backend to EC2
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          script_stop: true
+
           script: |
             set -e
 
-            echo "=== Starting deployment ==="
+            echo "Updating backend..."
 
             cd /home/ubuntu/chatbot
 
-            echo "1. Updating source code"
             git fetch origin main
             git reset --hard origin/main
 
-            echo "2. Installing backend dependencies"
             cd backend
+
             .venv/bin/pip install -r requirements.txt
 
-            echo "3. Restarting FastAPI"
             sudo systemctl restart chatbot-api.service
+
             sudo systemctl is-active chatbot-api.service
 
-            echo "4. Building React frontend"
-            cd /home/ubuntu/chatbot/frontend/ai-chat-ui
-            npm ci
-            npm run build
+            echo "Backend deployed successfully"
 
-            echo "5. Deploying frontend"
-            rm -rf /var/www/chatbot/*
-            cp -r build/. /var/www/chatbot/
 
-            echo "6. Checking Nginx"
+      # -------------------------
+      # CD - Copy React build
+      # -------------------------
+
+      - name: Deploy frontend to EC2
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+
+          source: "frontend/ai-chat-ui/build/*"
+          target: "/var/www/chatbot"
+          strip_components: 3
+
+
+      # -------------------------
+      # Verify Nginx
+      # -------------------------
+
+      - name: Verify deployment
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+
+          script: |
+            set -e
+
             sudo nginx -t
 
-            echo "=== Deployment successful ==="
+            sudo systemctl is-active chatbot-api.service
+
+            echo "Deployment completed successfully"

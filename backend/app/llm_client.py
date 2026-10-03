@@ -52,7 +52,12 @@ def disconnect_ollama_db():
     return {"status": "disconnected"}
 
 
-def query_ollama(file_text: str, user_query: str, mode: str):
+def query_ollama(
+    file_text: str | None,
+    user_query: str,
+    mode: str,
+    conversation_history: list[dict] | None = None,
+):
     if mode == "image":
         return "Image generation is not configured for this OpenRouter text client."
 
@@ -60,6 +65,12 @@ def query_ollama(file_text: str, user_query: str, mode: str):
         messages = [
             {"role": "system", "content": "Answer only from the supplied file. Say when the answer is not present."},
             {"role": "user", "content": f"File content:\n{file_text}\n\nQuestion:\n{user_query}"},
+        ]
+    elif mode == "chat":
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant. Answer clearly and conversationally."},
+            *(conversation_history or []),
+            {"role": "user", "content": user_query},
         ]
     else:
         messages = [

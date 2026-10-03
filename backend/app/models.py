@@ -64,4 +64,15 @@ class DatabaseQuery(Base):
     query_text = Column(Text, nullable=False)  # ✅ Renamed from 'message' to 'query_text'
     response_text = Column(Text, nullable=False)  # ✅ Renamed from 'response' to 'response_text'
     timestamp = Column(DateTime, default=datetime.utcnow)
+
+
+class PlainChatHistory(Base):
+    __tablename__ = "plain_chat_history"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    session_id = Column(String, nullable=False, index=True)
+    query_text = Column(Text, nullable=False)
+    response_text = Column(Text, nullable=False)
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
     

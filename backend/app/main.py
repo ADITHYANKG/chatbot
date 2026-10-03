@@ -1,7 +1,7 @@
 from fastapi import FastAPI, File, UploadFile, Form, Request, HTTPException, Depends
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine
-from models import User, FileUpload, ChatHistory, Base,Image,DatabaseQuery
+from models import User, FileUpload, ChatHistory, Base, Image, DatabaseQuery, PlainChatHistory
 from auth import create_access_token, get_password_hash, verify_password, oauth2_scheme
 from file_processor import extract_text_from_file
 from llm_client import query_ollama, connect_ollama_db, disconnect_ollama_db
@@ -182,7 +182,36 @@ async def query_llm(request: Request, user: User = Depends(get_current_user), db
             raise HTTPException(status_code=404,detail="file not found")
         file_text=file.extracted_content
     
-    response = query_ollama(file_text=file_text, user_query=query,mode=mode)  # ✅ Pass extracted content to LLM
+    session_id = None
+    conversation_history = []
+    if mode == "chat":
+        session_id = form_data.get("session_id") or str(uuid.uuid4())
+        previous_turns = (
+            db.query(PlainChatHistory)
+            .filter(
+                PlainChatHistory.user_id == user.id,
+                PlainChatHistory.session_id == session_id,
+            )
+            .order_by(PlainChatHistory.timestamp, PlainChatHistory.id)
+            .all()
+        )
+        if form_data.get("session_id") and not previous_turns:
+            raise HTTPException(status_code=404, detail="Chat session not found")
+        conversation_history = [
+            message
+            for turn in previous_turns
+            for message in (
+                {"role": "user", "content": turn.query_text},
+                {"role": "assistant", "content": turn.response_text},
+            )
+        ]
+
+    response = query_ollama(
+        file_text=file_text,
+        user_query=query,
+        mode=mode,
+        conversation_history=conversation_history if mode == "chat" else None,
+    )  # ✅ Pass extracted content to LLM
     
    
     # ✅ Store chat history with correct column names , and image history and db queries
@@ -208,6 +237,18 @@ async def query_llm(request: Request, user: User = Depends(get_current_user), db
         
         return {"response": response}
 
+    elif mode == "chat":
+        db.add(
+            PlainChatHistory(
+                user_id=user.id,
+                session_id=session_id,
+                query_text=query,
+                response_text=response,
+            )
+        )
+        db.commit()
+        return {"response": response, "session_id": session_id}
+
     else:
         session_id = form_data.get("session_id")
         database = form_data.get("database")
@@ -228,6 +269,55 @@ async def query_llm(request: Request, user: User = Depends(get_current_user), db
         db.add(new_db)
         db.commit()
         return {"response":response}
+
+
+@app.get("/chat-history")
+def get_plain_chat_sessions(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    turns = (
+        db.query(PlainChatHistory)
+        .filter(PlainChatHistory.user_id == user.id)
+        .order_by(PlainChatHistory.timestamp, PlainChatHistory.id)
+        .all()
+    )
+    sessions = {}
+    for turn in turns:
+        session = sessions.setdefault(
+            turn.session_id,
+            {
+                "session_id": turn.session_id,
+                "title": turn.query_text[:60],
+                "time": turn.timestamp.isoformat(),
+            },
+        )
+        session["time"] = turn.timestamp.isoformat()
+    return sorted(sessions.values(), key=lambda session: session["time"], reverse=True)
+
+
+@app.get("/chat-history/{session_id}")
+def get_plain_chat_session(
+    session_id: str,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    turns = (
+        db.query(PlainChatHistory)
+        .filter(
+            PlainChatHistory.user_id == user.id,
+            PlainChatHistory.session_id == session_id,
+        )
+        .order_by(PlainChatHistory.timestamp, PlainChatHistory.id)
+        .all()
+    )
+    if not turns:
+        raise HTTPException(status_code=404, detail="Chat session not found")
+    return [
+        {
+            "query": turn.query_text,
+            "response": turn.response_text,
+            "time": turn.timestamp.isoformat(),
+        }
+        for turn in turns
+    ]
 
         
 

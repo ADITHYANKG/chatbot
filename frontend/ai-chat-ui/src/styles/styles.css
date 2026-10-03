@@ -348,12 +348,13 @@ form.chat-input-bar button {
   background-color: #fff;
 
 }
-.filebutton, .imagebutton, .databasebutton {
+.chatbutton, .filebutton, .imagebutton, .databasebutton {
   border: 2px solid #f78b07;
   box-shadow: 0 0 10px rgba(247, 139, 7, 0.7);
   transition: all 0.3s ease;
   background-color: rgba(247, 139, 7, 0.1);
 }
+.dark-mode .chatbutton,
 .dark-mode .filebutton,
 .dark-mode .imagebutton,
 .dark-mode .databasebutton {

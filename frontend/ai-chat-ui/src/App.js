@@ -13,20 +13,25 @@ import ImageChatBox from "./components/ImageChatBox";
 import axios from "axios";
 import DbChatBox from "./components/DbchatBox";
 import QueryHistory from "./components/QueryHistory"
+import NormalChatBox from "./components/NormalChatBox";
+import NormalChatHistory from "./components/NormalChatHistory";
 
 function ChatPage() {
   
   
    //image bot
-  const [mode, setMode] = useState("file"); 
+  const [mode, setMode] = useState("chat");
   // or "image"
   const [dbHistory, setDbHistory] = useState([]);
   const [imageHistory, setImageHistory] = useState([]);
   const promptHistoryRef = useRef();
+  const normalChatHistoryRef = useRef();
   const [fileContent, setFileContent] = useState("");
   const [isTabular, setIsTabular] = useState(false);
   const [tableData, setTableData] = useState({ headers: [], rows: [] });
   const [chatHistory, setChatHistory] = useState([]);
+  const [normalChatHistory, setNormalChatHistory] = useState([]);
+  const [normalChatSessionId, setNormalChatSessionId] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   
@@ -43,7 +48,10 @@ function ChatPage() {
  
 
   const handlenewchat=()=>{
-    if (mode === "file" ) {
+    if (mode === "chat") {
+      setNormalChatHistory([]);
+      setNormalChatSessionId(null);
+    } else if (mode === "file" ) {
       setSelectedFile(null);
       setChatHistory([]);
       setFileContent("");
@@ -100,7 +108,8 @@ function ChatPage() {
         <button className="sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
           {darkMode? <i className="bi bi-list text-white"></i> :<i className="bi bi-list"></i>}
         </button>
-       {mode==="file"&&(<h2>💬 AI Chat with File</h2>)}        
+      {mode==="chat"&&(<h2>💬 Normal Chat</h2>)}
+      {mode==="file"&&(<h2>💬 AI Chat with File</h2>)}
        {mode==="image"&&(<h2>💬 AI Image Generation</h2>)} 
        {mode==="database"&&(<h2>💬 AI Query Database</h2>)} 
         <div className="header-controls">
@@ -114,6 +123,9 @@ function ChatPage() {
           <div className="sidebar-header ">
             <button className="btn btn-outline-primary w-100 mb-2" onClick={handlenewchat}>➕ New Chat</button>
             {/* <input type="text" className="form-control mb-2" placeholder="🔍 Search..." /> */}
+             <button className={`btn-gradient-violet w-100 mb-2 ${mode === "chat" ? "chatbutton" : ""}`} onClick={() => setMode("chat")}>
+              General Chat
+            </button>
             <button className={`btn-gradient-violet  w-100 mb-2 ${mode === "file"?( "filebutton"):""}`} onClick={() => setMode("file")}>
               📄 File Chat 
             </button>
@@ -125,6 +137,27 @@ function ChatPage() {
             </button>
           </div>
           <div className="sidebar-scroll-area">
+          {mode === "chat" && (
+            <NormalChatHistory
+              ref={normalChatHistoryRef}
+              selectedSessionId={normalChatSessionId}
+              onSelectChat={async (entry) => {
+                setNormalChatSessionId(entry.session_id);
+                try {
+                  const response = await axios.get(
+                    `http://localhost:8000/chat-history/${entry.session_id}`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                  );
+                  setNormalChatHistory(response.data.flatMap((turn) => [
+                    { role: "user", content: turn.query },
+                    { role: "ai", content: turn.response },
+                  ]));
+                } catch (error) {
+                  console.error("Failed to load chat session:", error);
+                }
+              }}
+            />
+          )}
           {mode === "file"&&(
     <FileHistory ref={fileHistoryRef} onSelectFile={handleFileSelect} />
   ) }{mode==="image"&&
@@ -175,6 +208,15 @@ function ChatPage() {
         </aside>
 
         <main className="main-content">
+        {mode === "chat" && (
+          <NormalChatBox
+            chatHistory={normalChatHistory}
+            setChatHistory={setNormalChatHistory}
+            sessionId={normalChatSessionId}
+            setSessionId={setNormalChatSessionId}
+            onConversationSaved={() => normalChatHistoryRef.current?.refreshChatList()}
+          />
+        )}
                {mode === "file" && (
             <>
             <div className="file-preview">

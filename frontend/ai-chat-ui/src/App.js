@@ -1,4 +1,4 @@
-import React, { useState, useContext, useRef } from "react";
+import React, { useState, useContext, useRef, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { AuthProvider, AuthContext } from "./context/AuthContext";
 import { ThemeProvider, ThemeContext } from "./context/ThemeContext";
@@ -48,7 +48,7 @@ function ChatPage() {
   const [normalChatHistory, setNormalChatHistory] = useState([]);
   const [normalChatSessionId, setNormalChatSessionId] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.matchMedia("(min-width: 768px)").matches);
   
 
   const [selectedSessionId, setSelectedSessionId] = useState(null);
@@ -61,6 +61,13 @@ function ChatPage() {
   const navigate = useNavigate();
   const QueryHistoryRef = useRef();
   const fileHistoryRef = useRef(); // ✅ Ref for sidebar refresh
+
+  useEffect(() => {
+    const desktopViewport = window.matchMedia("(min-width: 768px)");
+    const syncSidebarWithViewport = (event) => setSidebarOpen(event.matches);
+    desktopViewport.addEventListener("change", syncSidebarWithViewport);
+    return () => desktopViewport.removeEventListener("change", syncSidebarWithViewport);
+  }, []);
  
 
   const handlenewchat=()=>{

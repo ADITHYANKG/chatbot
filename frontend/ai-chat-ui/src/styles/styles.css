@@ -391,6 +391,10 @@ form.chat-input-bar button {
   flex-direction: column; 
 }
 
+.sidebar {
+  background-color: #f7f7f8;
+}
+
 
 .sidebar.collapsed {
   width: 0;

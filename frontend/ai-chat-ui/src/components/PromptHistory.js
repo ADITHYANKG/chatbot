@@ -115,7 +115,7 @@ const PromptHistory = forwardRef(({ onSelectPrompt }, ref) => {
 </div>
 
       {filteredPrompts.length === 0 ? (
-        <p className="text-muted text-center">No prompts found.</p>
+        <p className={`${darkMode ? "text-light" : "text-muted"} text-center`}>No prompts found.</p>
       ) : (
         <ul className="list-unstyled">
           {filteredPrompts.map((entry) => (

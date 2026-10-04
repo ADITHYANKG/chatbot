@@ -144,7 +144,7 @@ function ChatPage() {
             {darkMode ? <Sun size={18} aria-hidden="true" /> : <Moon size={18} aria-hidden="true" />}
           </button>
           <button onClick={handleLogout} className="btn btn-sm btn-danger">
-            <LogOut size={16} aria-hidden="true" /> Logout
+            <LogOut size={16} aria-hidden="true" /> <span className="header-logout-label">Logout</span>
           </button>
         </div>
       </header>

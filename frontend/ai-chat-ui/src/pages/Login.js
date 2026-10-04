@@ -91,13 +91,8 @@ export default function Login() {
   return (
     <div className={`min-vh-100 d-flex align-items-center justify-content-center ${darkMode ? "bg-dark text-light" : "bg-light text-dark"}`}>
       <div
-        className="p-4 rounded-4 shadow-lg"
-        style={{
-          minWidth: "340px",
-          maxWidth: "420px",
-          width: "100%",
-          backgroundColor: darkMode ? "#1f1f1f" : "#fff",
-        }}
+        className="auth-card p-4 rounded-4 shadow-lg"
+        style={{ backgroundColor: darkMode ? "#1f1f1f" : "#fff" }}
       >
         <h3 className="text-center mb-4"><Bot size={22} aria-hidden="true" /> Login to ChatBot</h3>
         {location.state?.notice && <p className="alert alert-info">{location.state.notice}</p>}

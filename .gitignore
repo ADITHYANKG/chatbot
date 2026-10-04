@@ -24,3 +24,4 @@ mcp_use.egg-info/
 # OS/editor noise
 .DS_Store
 Thumbs.db
+.github/workflows/instructions/

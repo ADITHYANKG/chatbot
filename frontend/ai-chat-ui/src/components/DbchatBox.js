@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect,useContext } from "react";
 import axios from "axios";
 import { ThemeContext } from "../context/ThemeContext";
+import { Database, Send } from "lucide-react";
+import ChatMessage from "./ChatMessage";
 
 export default function DbChatBox({dbHistory, setDbHistory,QueryHistoryRef,selectedSessionId,setSelectedSessionId,databasename,setdatabasename}) {
   const [query, setQuery] = useState("");
@@ -39,11 +41,11 @@ export default function DbChatBox({dbHistory, setDbHistory,QueryHistoryRef,selec
       console.log("db====",response.data.database)
       setAvailableDatabases(response.data.databases);
     } else {
-      alert("⚠️ Error: " + response.data.message);
+      alert("Error: " + response.data.message);
       setAvailableDatabases([]);
     }
   } catch (err) {
-    alert("⚠️ Failed to fetch databases.");
+    alert("Failed to fetch databases.");
     setAvailableDatabases([]);
     console.error(err);
   }
@@ -151,7 +153,7 @@ export default function DbChatBox({dbHistory, setDbHistory,QueryHistoryRef,selec
          
       } else {
         
-        alert("❌DBConnection failed: " + (response.data.message || "Unknown error"));
+        alert("Database connection failed: " + (response.data.message || "Unknown error"));
         setProgressPercent(0)
         setIsApiRunning(false)
         setFormLoading(false)
@@ -268,7 +270,7 @@ export default function DbChatBox({dbHistory, setDbHistory,QueryHistoryRef,selec
       setDbHistory([...newMessages, { role: "ai", content: response.data.response }]);
     } catch (error) {
       console.error("Query Error:", error);
-      setDbHistory([...newMessages, { role: "error", content: "⚠️ Error processing your request." }]);
+      setDbHistory([...newMessages, { role: "error", content: "Error processing your request." }]);
     } finally {
       setLoading(false);
     }
@@ -343,7 +345,7 @@ console.log("openform=",openform)
 
       {/* ✅ Center: DB Name */}
       <div className="fw-bold text-center text-truncate small">
-  <i className="bi bi-database-fill-gear"></i> {!openform &&  displayDbName || " "}
+  <Database size={16} aria-hidden="true" /> {!openform &&  displayDbName || " "}
 </div>
 
       
@@ -354,13 +356,13 @@ console.log("openform=",openform)
       
       connected?(
         <button className="btn btn-danger btn-sm" onClick={handleDisconnect} disabled={deloading}>
-          {deloading ?<div className="d-flex align-items-center gap-2"><div className="spinner-border spinner-border-sm" />Diconnecting </div> : "Disconnect"}
+          {deloading ?<div className="d-flex align-items-center gap-2"><div className="spinner-border spinner-border-sm" />Disconnecting...</div> : "Disconnect"}
         </button>):(<button
       onClick={handleform}
       className="btn btn-primary btn-sm d-flex align-items-center gap-2 shadow-sm"
       title="Toggle DB Connection"
     >
-      <i className="bi bi-database-fill-gear"></i>
+      <Database size={16} aria-hidden="true" />
       <span className="d-none d-md-inline">Connect</span>
     </button>)
         
@@ -389,7 +391,7 @@ console.log("openform=",openform)
 <form  onSubmit={(e) => { e.preventDefault(); handleConnect(); }}>
 
 
-      <h6 className="fw-bold text-center mb-3"><i className="bi bi-database-fill-gear"></i> Connect Your database</h6>
+      <h6 className="fw-bold text-center mb-3"><Database size={18} aria-hidden="true" /> Connect your database</h6>
       
       <div className="row g-2 mb-2">
         <div className="col-6">
@@ -466,7 +468,7 @@ console.log("openform=",openform)
             onClick={handleConnect}
             disabled={formLoading}
           >
-            🔌 Connect
+            <Database size={15} aria-hidden="true" /> Connect
           </button>
         </div>
       </div>
@@ -508,11 +510,7 @@ console.log("openform=",openform)
           
           
         ) : (
-          dbHistory.map((msg, index) => (
-            <div key={index} className={`chat-bubble ${msg.role}`}>
-              {msg.role === "user" ? "🧑‍💻 You:" : msg.role === "ai" ? "🤖 AI:" : "❌ Eror:"} {msg.content}
-            </div>
-          ))
+          dbHistory.map((msg, index) => <ChatMessage key={index} message={msg} />)
         )}
         {loading && (
           <div className="text-center my-2">
@@ -532,7 +530,7 @@ console.log("openform=",openform)
           disabled={loading || !connected ||isBlocked}
         />
         <button type="submit" disabled={loading || !connected }>
-          <i className="bi bi-send-fill"></i>
+          <Send size={18} aria-hidden="true" />
         </button>
       </form>
     </div>

@@ -1,5 +1,6 @@
 import React, { useEffect,useContext, useState, forwardRef, useImperativeHandle } from "react";
 import axios from "axios";
+import { FileText, FolderOpen, Search } from "lucide-react";
 import { ThemeProvider, ThemeContext } from "../context/ThemeContext";
 const FileHistory = forwardRef(({ onSelectFile }, ref) => {
   const [files, setFiles] = useState([]);
@@ -57,15 +58,19 @@ const FileHistory = forwardRef(({ onSelectFile }, ref) => {
       
       <div className={`search-box sticky-top sidecol ${darkMode ? "dark-mode" : "light-mode"} pt-3 pb-2`}>
       
-      <h6 className="text-center fw-bold mb-2">📁 My Chats</h6>
+      <h6 className="text-center fw-bold mb-2"><FolderOpen size={16} aria-hidden="true" /> My Files</h6>
 
-      <input
-        type="text"
-        className="form-control mb-3"
-        placeholder="🔍 Search files..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
+      <div className="input-group mb-3">
+        <span className="input-group-text" aria-hidden="true"><Search size={15} /></span>
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Search files..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          aria-label="Search files"
+        />
+      </div>
       </div>
      
       {filteredFiles.length === 0 ? (
@@ -88,7 +93,7 @@ const FileHistory = forwardRef(({ onSelectFile }, ref) => {
               title={`Uploaded: ${new Date(file.upload_time).toLocaleString()}`}
               style={{ cursor: "pointer" }}
             >
-              📄 {file.filename.length > 30 ? file.filename.slice(0, 30) + "..." : file.filename}
+              <FileText size={15} aria-hidden="true" /> {file.filename.length > 30 ? file.filename.slice(0, 30) + "..." : file.filename}
               <div className="timestamp small ">
                 {new Date(file.upload_time).toLocaleDateString()}
               </div>

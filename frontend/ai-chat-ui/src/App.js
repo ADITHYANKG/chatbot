@@ -19,6 +19,7 @@ import DbChatBox from "./components/DbchatBox";
 import QueryHistory from "./components/QueryHistory"
 import NormalChatBox from "./components/NormalChatBox";
 import NormalChatHistory from "./components/NormalChatHistory";
+import { Bot, Database, FileText, Image as ImageIcon, LogOut, Menu, MessageSquare, Moon, Plus, Sun } from "lucide-react";
 
 const getUsernameFromToken = (token) => {
   try {
@@ -127,34 +128,46 @@ function ChatPage() {
           aria-controls="chat-sidebar"
           onClick={() => setSidebarOpen(!sidebarOpen)}
         >
-          {darkMode? <i className="bi bi-list text-white"></i> :<i className="bi bi-list"></i>}
+          <Menu size={20} aria-hidden="true" />
         </button>
-      {mode==="chat"&&(<h2>💬 Normal Chat</h2>)}
-      {mode==="file"&&(<h2>💬 AI Chat with File</h2>)}
-       {mode==="image"&&(<h2>💬 AI Image Generation</h2>)} 
-       {mode==="database"&&(<h2>💬 AI Query Database</h2>)} 
+      {mode === "chat" && <h2><MessageSquare size={20} aria-hidden="true" /> Normal Chat</h2>}
+      {mode === "file" && <h2><FileText size={20} aria-hidden="true" /> AI Chat with File</h2>}
+      {mode === "image" && <h2><ImageIcon size={20} aria-hidden="true" /> AI Image Generation</h2>}
+      {mode === "database" && <h2><Database size={20} aria-hidden="true" /> AI Query Database</h2>}
         <div className="header-controls">
-          <button onClick={toggleTheme} className="btn btn-sm">{darkMode ? "🔆" : "🌙"}</button>
-          <button onClick={handleLogout} className="btn btn-sm btn-danger">Logout</button>
+          <button
+            onClick={toggleTheme}
+            className="btn btn-sm theme-toggle"
+            aria-label={darkMode ? "Switch to light theme" : "Switch to dark theme"}
+            title={darkMode ? "Switch to light theme" : "Switch to dark theme"}
+          >
+            {darkMode ? <Sun size={18} aria-hidden="true" /> : <Moon size={18} aria-hidden="true" />}
+          </button>
+          <button onClick={handleLogout} className="btn btn-sm btn-danger">
+            <LogOut size={16} aria-hidden="true" /> Logout
+          </button>
         </div>
       </header>
 
       <div className="app-body">
         <aside id="chat-sidebar" className={`sidebar ${sidebarOpen ? "open" : "collapsed"} border-end` } >
           <div className="sidebar-header ">
-            <button className="btn btn-outline-primary w-100 mb-2" onClick={handlenewchat}>➕ New Chat</button>
+            <button className="btn btn-outline-primary w-100 mb-2" onClick={handlenewchat}>
+              <Plus size={16} aria-hidden="true" /> New Chat
+            </button>
             {/* <input type="text" className="form-control mb-2" placeholder="🔍 Search..." /> */}
              <button className={`btn-gradient-violet w-100 mb-2 ${mode === "chat" ? "chatbutton" : ""}`} onClick={() => setMode("chat")}>
+              <MessageSquare size={16} aria-hidden="true" />
               General Chat
             </button>
             <button className={`btn-gradient-violet  w-100 mb-2 ${mode === "file"?( "filebutton"):""}`} onClick={() => setMode("file")}>
-              📄 File Chat 
+              <FileText size={16} aria-hidden="true" /> File Chat
             </button>
             <button className={`btn-gradient-violet file  w-100 mb-2 ${mode === "image" ? "imagebutton":"" }`}  onClick={() => setMode("image")}>
-              🖼️ Image Engine 
+              <ImageIcon size={16} aria-hidden="true" /> Image Engine
             </button>
             <button className={`btn-gradient-violet  w-100 mb-2 ${mode === "database" ? "databasebutton":""}`}  onClick={() => setMode("database")}>
-            🛢️ Db Query
+            <Database size={16} aria-hidden="true" /> Db Query
             </button>
           </div>
           <div className="sidebar-scroll-area">

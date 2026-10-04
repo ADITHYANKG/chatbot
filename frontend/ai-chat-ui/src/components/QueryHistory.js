@@ -1,5 +1,6 @@
 import React, { useEffect,useContext, useState, forwardRef, useImperativeHandle } from "react";
 import axios from "axios";
+import { Database, FileText, Search } from "lucide-react";
 import { ThemeProvider, ThemeContext } from "../context/ThemeContext";
 const QueryHistory = forwardRef(({ onSelectquery,setSelectedSessionId,selectedSessionId,setdatabasename}, ref) => {
   const [query, setquery] = useState([]);
@@ -53,15 +54,19 @@ const QueryHistory = forwardRef(({ onSelectquery,setSelectedSessionId,selectedSe
       
       <div className={`search-box sticky-top sidecol ${darkMode ? "dark-mode" : "light-mode"} pt-3 pb-2`}>
       
-      <h6 className="text-center fw-bold mb-2"> <i className="bi bi-database-fill-gear"></i> My Chats </h6>
+      <h6 className="text-center fw-bold mb-2"><Database size={16} aria-hidden="true" /> Query History</h6>
 
-      <input
-        type="text"
-        className="form-control mb-3"
-        placeholder="🔍 Search db queries..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
+      <div className="input-group mb-3">
+        <span className="input-group-text" aria-hidden="true"><Search size={15} /></span>
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Search queries..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          aria-label="Search database queries"
+        />
+      </div>
       </div>
      
       {filteredqueries.length === 0 ? (
@@ -83,7 +88,7 @@ const QueryHistory = forwardRef(({ onSelectquery,setSelectedSessionId,selectedSe
       title={`Session started: ${new Date(entry.time).toLocaleString()}`}
       style={{ cursor: "pointer" }}
     >
-      🧾{entry.query.length > 30 ? entry.query.slice(0, 30) + "..." : entry.query}
+      <FileText size={15} aria-hidden="true" /> {entry.query.length > 30 ? entry.query.slice(0, 30) + "..." : entry.query}
       <div className="timestamp small">{entry.database} ({new Date(entry.time).toLocaleDateString()})</div>
     </li>
   ))}

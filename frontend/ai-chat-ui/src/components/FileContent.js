@@ -1,10 +1,11 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
+import { FileText } from "lucide-react";
 
 export default function FileContent({ isTabular, tableData, fileContent }) {
   return (
     <div className="file-preview-window">
-      <h5 className="mb-3">📄 Extracted File Content</h5>
+      <h5 className="mb-3"><FileText size={18} aria-hidden="true" /> Extracted File Content</h5>
          
       {/* ✅ Tabular content */}
       {isTabular && tableData.headers.length > 0 ? (

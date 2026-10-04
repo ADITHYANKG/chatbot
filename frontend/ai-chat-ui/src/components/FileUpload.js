@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { Upload } from "lucide-react";
 
 export default function FileUpload({ setFileContent, setIsTabular, setTableData, onUploadSuccess }) {
   const [loading, setLoading] = useState(false);
@@ -14,14 +15,14 @@ export default function FileUpload({ setFileContent, setIsTabular, setTableData,
     const token = localStorage.getItem("token");  // ✅ Retrieve token
 
     if (!token) {
-      console.error("❌ No token found in localStorage.");
-      setError("❌ You must be logged in to upload a file.");
+      console.error("No token found in localStorage.");
+      setError("You must be logged in to upload a file.");
       setLoading(false);
       return;
     }
 
     if (!file) {
-      setError("❌ Please select a file to upload.");
+      setError("Please select a file to upload.");
       setLoading(false);
       return;
     }
@@ -30,7 +31,7 @@ export default function FileUpload({ setFileContent, setIsTabular, setTableData,
     const fileExtension = file.name.split(".").pop().toLowerCase();
 
     if (!allowedTypes.includes(fileExtension)) {
-      setError(`❌ Unsupported file type (${fileExtension}). Allowed: ${allowedTypes.join(", ")}`);
+      setError(`Unsupported file type (${fileExtension}). Allowed: ${allowedTypes.join(", ")}`);
       setLoading(false);
       return;
     }
@@ -69,7 +70,7 @@ export default function FileUpload({ setFileContent, setIsTabular, setTableData,
 
     } catch (error) {
       console.error("File Upload Error:", error);
-      setError("❌ Upload failed. Please try again.");
+      setError("Upload failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -79,7 +80,7 @@ export default function FileUpload({ setFileContent, setIsTabular, setTableData,
     <form onSubmit={handleFileUpload} className="p-3 bg-light border rounded d-flex align-items-center gap-3">
       <input type="file" name="file" required className="form-control" accept=".pdf,.csv,.xls,.xlsx,.txt" />
       <button type="submit" className="btn btn-primary" disabled={loading}>
-        {loading ? "Uploading..." : "Upload"}
+        {loading ? "Uploading..." : <><Upload size={16} aria-hidden="true" /> Upload</>}
       </button>
       {/* {error && <p className="text-danger mt-2">{error}</p>} */}
     </form>

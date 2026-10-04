@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import { Paperclip, Send } from "lucide-react";
+import ChatMessage from "./ChatMessage";
 
 export default function ChatBox({ selectedFile, chatHistory, setChatHistory, onFileUploadSuccess }) {
   const [query, setQuery] = useState("");
@@ -31,7 +33,7 @@ export default function ChatBox({ selectedFile, chatHistory, setChatHistory, onF
       setChatHistory([...newMessages, { role: "ai", content: response.data.response }]);
     } catch (error) {
       console.error("Query Error:", error);
-      setChatHistory([...newMessages, { role: "error", content: "⚠️ Error processing your request." }]);
+      setChatHistory([...newMessages, { role: "error", content: "Error processing your request." }]);
     } finally {
       setLoading(false);
     }
@@ -52,7 +54,7 @@ export default function ChatBox({ selectedFile, chatHistory, setChatHistory, onF
       if (onFileUploadSuccess) onFileUploadSuccess(uploadedFile);
     } catch (error) {
       console.error("Upload failed", error);
-      setChatHistory([...chatHistory, { role: "error", content: "⚠️ File upload failed." }]);
+      setChatHistory([...chatHistory, { role: "error", content: "File upload failed." }]);
     }
   };
   
@@ -63,9 +65,7 @@ export default function ChatBox({ selectedFile, chatHistory, setChatHistory, onF
           <p className=" text-center">Select a file and start chatting...</p>
         ) : (
           chatHistory.map((msg, index) => (
-            <div key={index} className={`chat-bubble ${msg.role}`}>
-              {msg.role === "user" ? "🧑‍💻 You:" : msg.role === "ai" ? "🤖 AI:" : "❌ Error:"} {msg.content}
-            </div>
+            <ChatMessage key={index} message={msg} />
           ))
         )}
         {loading && (
@@ -79,8 +79,8 @@ export default function ChatBox({ selectedFile, chatHistory, setChatHistory, onF
 
       <form onSubmit={handleQuery} className="chat-input-bar">
         {/* Upload */}
-        <label className="btn btn-outline-secondary mb-0">
-          <i className="bi bi-paperclip"></i>
+        <label className="btn btn-outline-secondary mb-0" title="Attach a file">
+          <Paperclip size={18} aria-hidden="true" />
           <input
             type="file"
             style={{ display: "none" }}
@@ -99,8 +99,8 @@ export default function ChatBox({ selectedFile, chatHistory, setChatHistory, onF
         />
 
         {/* Send */}
-        <button type="submit" disabled={loading || !selectedFile}>
-          <i className="bi bi-send-fill"></i>
+        <button type="submit" aria-label="Send message" disabled={loading || !selectedFile}>
+          <Send size={18} aria-hidden="true" />
         </button>
       </form>
     </div>

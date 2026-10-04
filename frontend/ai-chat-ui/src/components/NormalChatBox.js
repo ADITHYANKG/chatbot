@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
+import { Send } from "lucide-react";
+import ChatMessage from "./ChatMessage";
 
 export default function NormalChatBox({
   chatHistory,
@@ -61,14 +63,7 @@ export default function NormalChatBox({
           <p className="text-center">Ask a question to start chatting.</p>
         ) : (
           chatHistory.map((message, index) => (
-            <div key={`${index}-${message.role}`} className={`chat-bubble ${message.role}`}>
-              {message.role === "user"
-                ? "You: "
-                : message.role === "ai"
-                  ? "AI: "
-                  : "Error: "}
-              {message.content}
-            </div>
+            <ChatMessage key={`${index}-${message.role}`} message={message} />
           ))
         )}
         {loading && (
@@ -90,7 +85,7 @@ export default function NormalChatBox({
           disabled={loading}
         />
         <button type="submit" aria-label="Send message" disabled={loading || !query.trim()}>
-          <i className="bi bi-send-fill" />
+          <Send size={18} aria-hidden="true" />
         </button>
       </form>
     </div>

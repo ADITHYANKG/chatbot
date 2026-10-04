@@ -62,6 +62,7 @@
 // }
 import React, { useEffect,useContext, useState, forwardRef, useImperativeHandle } from "react";
 import axios from "axios";
+import { Image as ImageIcon, Search } from "lucide-react";
 import { ThemeProvider, ThemeContext } from "../context/ThemeContext";
 const PromptHistory = forwardRef(({ onSelectPrompt }, ref) => {
   const [prompts, setPrompts] = useState([]);
@@ -99,14 +100,18 @@ const PromptHistory = forwardRef(({ onSelectPrompt }, ref) => {
   return (
     <div className="file-history p-0"> 
     <div className={`search-box sticky-top sidecol ${darkMode ? "dark-mode" : "light-mode"} pt-3 pb-2`}>
-      <h6 className="text-center fw-bold mb-2">🖼️ My Chats</h6>
-      <input
-        type="text"
-        className="form-control mb-3"
-        placeholder="🔍 Search images..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
+      <h6 className="text-center fw-bold mb-2"><ImageIcon size={16} aria-hidden="true" /> My Images</h6>
+      <div className="input-group mb-3">
+        <span className="input-group-text" aria-hidden="true"><Search size={15} /></span>
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Search images..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          aria-label="Search images"
+        />
+      </div>
 </div>
 
       {filteredPrompts.length === 0 ? (
@@ -133,7 +138,7 @@ const PromptHistory = forwardRef(({ onSelectPrompt }, ref) => {
               title={`Generated: ${new Date(entry.time).toLocaleString()}`}
               style={{ cursor: "pointer" }}
             >
-              🖼️ {entry.prompt.length > 30 ? entry.prompt.slice(0, 30) + "..." : entry.prompt}
+              <ImageIcon size={15} aria-hidden="true" /> {entry.prompt.length > 30 ? entry.prompt.slice(0, 30) + "..." : entry.prompt}
               <div className="timestamp small ">
                 {new Date(entry.time).toLocaleDateString()}
               </div>

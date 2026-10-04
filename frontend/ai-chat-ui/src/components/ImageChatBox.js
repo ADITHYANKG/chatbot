@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
+import { Image as ImageIcon, Send, Sparkles } from "lucide-react";
 
 export default function ImageChatBox({ history, setHistory,promptHistoryRef }) {
   const [prompt, setPrompt] = useState("");
@@ -55,7 +56,7 @@ export default function ImageChatBox({ history, setHistory,promptHistoryRef }) {
         <div className="w-100" style={{ maxWidth: "800px" }}>
           {/* Prompt Bubble */}
           <div className="prompt py-2 px-3 rounded-3" style={{ wordBreak: "break-word" }}>
-            <strong>🪄:</strong> {history[history.length - 1].prompt}
+            <strong><Sparkles size={16} aria-hidden="true" /> Prompt:</strong> {history[history.length - 1].prompt}
           </div>
 
           {/* Image Box */}
@@ -75,7 +76,7 @@ export default function ImageChatBox({ history, setHistory,promptHistoryRef }) {
   {loading && (
     <div className="rounded shadow d-flex w-100 h-100 border border-secondary flex-column align-items-center justify-content-center gap-2">
       <div className="spinner-border text-success" />
-      <span className="">🤖 Generating image...</span>
+      <span className="d-flex align-items-center gap-2"><ImageIcon size={16} aria-hidden="true" /> Generating image...</span>
     </div>
   )}
 
@@ -112,7 +113,7 @@ export default function ImageChatBox({ history, setHistory,promptHistoryRef }) {
       onChange={(e) => setPrompt(e.target.value)}
     />
     <button type="submit" disabled={loading}>
-      <i className="bi bi-send-fill"></i>
+      <Send size={18} aria-hidden="true" />
     </button>
   </form>
 </div>

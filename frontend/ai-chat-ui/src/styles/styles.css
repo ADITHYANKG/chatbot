@@ -388,6 +388,10 @@ form.chat-input-bar button {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.timestamp {
+  font-size: 0.75rem;
+  line-height: 1.25;
+}
 .sidebar-scroll-area.collapsed{
   width: 0;
 }

@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 # ✅ Enable CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # ✅ Allow React frontend
+    allow_origins=["http://localhost:3000", "https://botlocalai.duckdns.org"],  # ✅ Allow React frontend
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

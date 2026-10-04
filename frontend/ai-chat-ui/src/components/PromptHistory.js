@@ -139,7 +139,7 @@ const PromptHistory = forwardRef(({ onSelectPrompt }, ref) => {
               style={{ cursor: "pointer" }}
             >
               <ImageIcon size={15} aria-hidden="true" /> {entry.prompt.length > 30 ? entry.prompt.slice(0, 30) + "..." : entry.prompt}
-              <div className="timestamp small ">
+              <div className="timestamp small text-muted">
                 {new Date(entry.time).toLocaleDateString()}
               </div>
             </li>

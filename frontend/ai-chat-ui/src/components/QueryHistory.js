@@ -89,7 +89,7 @@ const QueryHistory = forwardRef(({ onSelectquery,setSelectedSessionId,selectedSe
       style={{ cursor: "pointer" }}
     >
       <FileText size={15} aria-hidden="true" /> {entry.query.length > 30 ? entry.query.slice(0, 30) + "..." : entry.query}
-      <div className="timestamp small">{entry.database} ({new Date(entry.time).toLocaleDateString()})</div>
+      <div className="timestamp small text-muted">{entry.database} ({new Date(entry.time).toLocaleDateString()})</div>
     </li>
   ))}
 </ul>

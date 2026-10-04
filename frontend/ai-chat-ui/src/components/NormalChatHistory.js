@@ -44,7 +44,7 @@ const NormalChatHistory = forwardRef(({ selectedSessionId, onSelectChat }, ref) 
               style={{ cursor: "pointer" }}
             >
               {session.title || "New chat"}
-              <div className="timestamp small">
+              <div className="timestamp small text-muted">
                 {new Date(session.time).toLocaleDateString()}
               </div>
             </li>

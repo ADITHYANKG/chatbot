@@ -94,7 +94,7 @@ const FileHistory = forwardRef(({ onSelectFile }, ref) => {
               style={{ cursor: "pointer" }}
             >
               <FileText size={15} aria-hidden="true" /> {file.filename.length > 30 ? file.filename.slice(0, 30) + "..." : file.filename}
-              <div className="timestamp small ">
+              <div className="timestamp small text-muted">
                 {new Date(file.upload_time).toLocaleDateString()}
               </div>
             </li>

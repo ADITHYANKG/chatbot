@@ -10,4 +10,12 @@ python-jose
 python-multipart
 pycryptodome
 python-dotenv
+pwdlib[argon2]
+alembic
+pytest
+email-validator
+httpx
+pwdlib[argon2]
+alembic
+pytest
 

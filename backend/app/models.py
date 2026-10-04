@@ -1,6 +1,6 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from database import Base
 import uuid 
 class ChatHistory(Base):
@@ -38,9 +38,31 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=False)
+    email = Column(String(320), nullable=True)
+    email_verified = Column(Boolean, nullable=False, default=False)
+    token_version = Column(Integer, nullable=False, default=0)
+    __table_args__ = (Index("ix_users_email", "email", unique=True),)
     
     files = relationship("FileUpload", back_populates="user")
     chats = relationship("ChatHistory", back_populates="user")  # ✅ Allow access to chat history
+
+
+class EmailActionToken(Base):
+    __tablename__ = "email_action_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    purpose = Column(String(32), nullable=False, index=True)
+    token_digest = Column(String(64), nullable=False, unique=True)
+    expires_at = Column(DateTime, nullable=False, index=True)
+    consumed_at = Column(DateTime, nullable=True)
+    created_at = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+        nullable=False,
+    )
+
+
 class Image(Base):
     __tablename__="images"
     id=Column(Integer,primary_key=True,index=True)

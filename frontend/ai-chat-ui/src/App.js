@@ -4,6 +4,10 @@ import { AuthProvider, AuthContext } from "./context/AuthContext";
 import { ThemeProvider, ThemeContext } from "./context/ThemeContext";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import VerifyEmail from "./pages/VerifyEmail";
+import AccountEmail from "./pages/AccountEmail";
 import ChatBox from "./components/ChatBox";
 import FileContent from "./components/FileContent";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -293,6 +297,10 @@ function App() {
             <Route path="/" element={<Navigate to="/login" />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/account/email" element={<AccountEmail />} />
             <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
           </Routes>
         </Router>

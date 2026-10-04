@@ -9,6 +9,9 @@
     { "key": "token", "value": "" },
     { "key": "username", "value": "postman_user" },
     { "key": "password", "value": "PostmanPassword123!" },
+    { "key": "email", "value": "postman_user@example.com" },
+    { "key": "action_token", "value": "" },
+    { "key": "new_password", "value": "NewPostmanPassword123!" },
     { "key": "file_id", "value": "1" },
     { "key": "session_id", "value": "" }
   ],
@@ -32,9 +35,55 @@
             "header": [{ "key": "Content-Type", "value": "application/x-www-form-urlencoded" }],
             "body": { "mode": "urlencoded", "urlencoded": [
               { "key": "username", "value": "{{username}}", "type": "text" },
-              { "key": "password", "value": "{{password}}", "type": "text" }
+              { "key": "password", "value": "{{password}}", "type": "text" },
+              { "key": "email", "value": "{{email}}", "type": "text" }
             ]},
             "url": "{{base_url}}/register/"
+          }
+        },
+        {
+          "name": "Request Password Reset",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/x-www-form-urlencoded" }],
+            "body": { "mode": "urlencoded", "urlencoded": [
+              { "key": "email", "value": "{{email}}", "type": "text" }
+            ]},
+            "url": "{{base_url}}/password-reset/request/"
+          }
+        },
+        {
+          "name": "Confirm Password Reset",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/x-www-form-urlencoded" }],
+            "body": { "mode": "urlencoded", "urlencoded": [
+              { "key": "token", "value": "{{action_token}}", "type": "text" },
+              { "key": "new_password", "value": "{{new_password}}", "type": "text" }
+            ]},
+            "url": "{{base_url}}/password-reset/confirm/"
+          }
+        },
+        {
+          "name": "Request Email Verification",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/x-www-form-urlencoded" }],
+            "body": { "mode": "urlencoded", "urlencoded": [
+              { "key": "email", "value": "{{email}}", "type": "text" }
+            ]},
+            "url": "{{base_url}}/email-verification/request/"
+          }
+        },
+        {
+          "name": "Confirm Email Verification",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/x-www-form-urlencoded" }],
+            "body": { "mode": "urlencoded", "urlencoded": [
+              { "key": "token", "value": "{{action_token}}", "type": "text" }
+            ]},
+            "url": "{{base_url}}/email-verification/confirm/"
           }
         },
         {

@@ -61,13 +61,17 @@
 import React, { useContext, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { ThemeContext } from "../context/ThemeContext";
-import { useNavigate, Link } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
+import PasswordInput from "../components/PasswordInput";
+import { Bot } from "lucide-react";
 
 export default function Login() {
   const { login } = useContext(AuthContext);
   const { darkMode } = useContext(ThemeContext);
   const navigate = useNavigate();
+  const location = useLocation();
   const [form, setForm] = useState({ username: "", password: "" });
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -75,9 +79,12 @@ export default function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    const success = await login(form.username, form.password);
-    if (success) {
-      navigate("/chat");
+    setError("");
+    const result = await login(form.username, form.password);
+    if (result) {
+      navigate(result.emailVerified ? "/chat" : "/account/email");
+    } else {
+      setError("Login failed. Check your username and password.");
     }
   };
 
@@ -92,7 +99,8 @@ export default function Login() {
           backgroundColor: darkMode ? "#1f1f1f" : "#fff",
         }}
       >
-        <h3 className="text-center mb-4">🤖 Login to ChatBot</h3>
+        <h3 className="text-center mb-4"><Bot size={22} aria-hidden="true" /> Login to ChatBot</h3>
+        {location.state?.notice && <p className="alert alert-info">{location.state.notice}</p>}
         <form onSubmit={handleLogin}>
           <div className="mb-3">
             <label className="form-label">Username</label>
@@ -105,21 +113,24 @@ export default function Login() {
               required
             />
           </div>
-          <div className="mb-4">
-            <label className="form-label">Password</label>
-            <input
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              className={`form-control ${darkMode ? "bg-dark text-light border-secondary" : ""}`}
-              required
-            />
-          </div>
+          <PasswordInput
+            id="login-password"
+            name="password"
+            label="Password"
+            value={form.password}
+            onChange={handleChange}
+            darkMode={darkMode}
+            autoComplete="current-password"
+            className="mb-4"
+          />
+          {error && <p className="text-danger small" role="alert">{error}</p>}
           <button type="submit" className="btn btn-success w-100">Login</button>
         </form>
 
-        {/* Sign Up Link */}
+        <div className="d-flex justify-content-between mt-3 small">
+          <Link to="/forgot-password">Forgot password?</Link>
+          <Link to="/verify-email">Resend verification</Link>
+        </div>
         <div className="text-center mt-3">
           <span className="me-1">Don't have an account?</span>
           <Link to="/register" className={`fw-bold ${darkMode ? "text-light" : "text-primary"}`}>

@@ -75,25 +75,32 @@
 //   );
 // }
 import { useState, useContext } from "react";
-import { AuthContext } from "../context/AuthContext";
 import { ThemeContext } from "../context/ThemeContext";
 import { useNavigate, Link } from "react-router-dom";
+import PasswordInput from "../components/PasswordInput";
+import { PASSWORD_REQUIREMENTS_MESSAGE, passwordMeetsRequirements } from "../utils/passwordPolicy";
+import { UserPlus } from "lucide-react";
 
 export default function Register() {
-  const { login } = useContext(AuthContext);
   const { darkMode } = useContext(ThemeContext);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    if (!passwordMeetsRequirements(password)) {
+      setError(PASSWORD_REQUIREMENTS_MESSAGE);
+      return;
+    }
 
     const formData = new URLSearchParams();
     formData.append("username", username);
     formData.append("password", password);
+    formData.append("email", email);
 
     try {
       const response = await fetch("http://localhost:8000/register/", {
@@ -109,12 +116,9 @@ export default function Register() {
         throw new Error(data.detail || "Registration failed");
       }
 
-      const loginSucceeded = await login(username, password);
-      if (loginSucceeded) {
-        navigate("/chat");
-      } else {
-        throw new Error("Registration succeeded, but automatic login failed");
-      }
+      navigate("/login", {
+        state: { notice: "Account created. Check your email for a verification link before signing in." },
+      });
     } catch (error) {
       setError(error.message);
     }
@@ -131,7 +135,7 @@ export default function Register() {
           backgroundColor: darkMode ? "#1f1f1f" : "#fff",
         }}
       >
-        <h3 className="text-center mb-2">🚀 Create Your Account</h3>
+        <h3 className="text-center mb-2"><UserPlus size={22} aria-hidden="true" /> Create Your Account</h3>
         <p className="text-center text-muted mb-4">Join and start chatting with AI</p>
 
         <form onSubmit={handleSubmit}>
@@ -143,25 +147,35 @@ export default function Register() {
               onChange={(e) => setUsername(e.target.value)}
               required
               className={`form-control ${darkMode ? "bg-dark text-light border-secondary" : ""}`}
-              placeholder="👤 Choose a username"
+              placeholder="Choose a username"
             />
           </div>
 
           <div className="mb-3">
-            <label className="form-label">Password</label>
+            <label className="form-label">Email</label>
             <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
               className={`form-control ${darkMode ? "bg-dark text-light border-secondary" : ""}`}
-              placeholder="🔒 Choose a password"
+              autoComplete="email"
             />
           </div>
 
+          <PasswordInput
+            id="register-password"
+            label="Password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            darkMode={darkMode}
+            autoComplete="new-password"
+            showRequirements
+          />
+
           {error && <p className="text-danger text-center small mb-3">{error}</p>}
 
-          <button type="submit" className="btn btn-success w-100">Sign Up 🚀</button>
+          <button type="submit" className="btn btn-success w-100">Create account</button>
         </form>
 
         <div className="text-center mt-3">

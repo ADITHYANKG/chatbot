@@ -16,6 +16,16 @@ import QueryHistory from "./components/QueryHistory"
 import NormalChatBox from "./components/NormalChatBox";
 import NormalChatHistory from "./components/NormalChatHistory";
 
+const getUsernameFromToken = (token) => {
+  try {
+    const payload = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const paddedPayload = payload.padEnd(Math.ceil(payload.length / 4) * 4, "=");
+    return JSON.parse(window.atob(paddedPayload)).sub || "User";
+  } catch {
+    return "User";
+  }
+};
+
 function ChatPage() {
   
   
@@ -40,6 +50,7 @@ function ChatPage() {
   const [databasename,setdatabasename]=useState(null)
 
   const token = localStorage.getItem("token");
+  const username = token ? getUsernameFromToken(token) : "User";
   const { logout } = useContext(AuthContext);
   const { darkMode, toggleTheme } = useContext(ThemeContext);
   const navigate = useNavigate();
@@ -84,11 +95,11 @@ function ChatPage() {
           rows: fileContentResponse.data.table_rows || [],
         });
       }
-      
+
       const chatHistoryResponse = await axios.get(`http://localhost:8000/chats/${file.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       if (chatHistoryResponse.data) {
         setChatHistory(chatHistoryResponse.data);
       }
@@ -105,7 +116,13 @@ function ChatPage() {
   return (
     <div className={`app-wrapper ${darkMode ? "dark-mode" : "light-mode"}`}>
       <header className="app-header">
-        <button className="sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+        <button
+          className="sidebar-toggle"
+          aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+          aria-expanded={sidebarOpen}
+          aria-controls="chat-sidebar"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+        >
           {darkMode? <i className="bi bi-list text-white"></i> :<i className="bi bi-list"></i>}
         </button>
       {mode==="chat"&&(<h2>💬 Normal Chat</h2>)}
@@ -119,7 +136,7 @@ function ChatPage() {
       </header>
 
       <div className="app-body">
-        <aside className={`sidebar ${sidebarOpen ? "open" : "collapsed"} border-end` } >
+        <aside id="chat-sidebar" className={`sidebar ${sidebarOpen ? "open" : "collapsed"} border-end` } >
           <div className="sidebar-header ">
             <button className="btn btn-outline-primary w-100 mb-2" onClick={handlenewchat}>➕ New Chat</button>
             {/* <input type="text" className="form-control mb-2" placeholder="🔍 Search..." /> */}
@@ -204,8 +221,22 @@ function ChatPage() {
 
 
 
-  } </div>
+  }
+          </div>
+          <div className="sidebar-user" title={username}>
+            <div className="sidebar-user-avatar" aria-hidden="true">
+              {username.charAt(0).toUpperCase()}
+            </div>
+            <span className="sidebar-user-name">{username}</span>
+          </div>
         </aside>
+        {sidebarOpen && (
+          <button
+            className="mobile-sidebar-backdrop"
+            aria-label="Close sidebar"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
 
         <main className="main-content">
         {mode === "chat" && (

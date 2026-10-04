@@ -190,6 +190,10 @@ form.chat-input-bar button {
   border-right: 1px solid #2c2c2c;
 }
 
+.dark-mode .sidebar .timestamp.text-muted {
+  color: #aeb6c2 !important;
+}
+
 .dark-mode .sidebar-user {
   color: #f5f5f5;
   border-top-color: #555;

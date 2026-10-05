@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { Paperclip, Send } from "lucide-react";
 import ChatMessage from "./ChatMessage";
+import { API_BASE_URL } from "../services/authApi";
 
 export default function ChatBox({ selectedFile, chatHistory, setChatHistory, onFileUploadSuccess }) {
   const [query, setQuery] = useState("");
@@ -26,7 +27,7 @@ export default function ChatBox({ selectedFile, chatHistory, setChatHistory, onF
     
     try {
       const response = await axios.post(
-        "http://localhost:8000/query/",
+        `${API_BASE_URL}/query/`,
         { query, file_id: selectedFile.id,mode:"file" },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -47,7 +48,7 @@ export default function ChatBox({ selectedFile, chatHistory, setChatHistory, onF
     formData.append("file", file);
 
     try {
-      const response = await axios.post("http://localhost:8000/upload/", formData, {
+      const response = await axios.post(`${API_BASE_URL}/upload/`, formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const uploadedFile = { id: response.data.file_id, filename: file.name };

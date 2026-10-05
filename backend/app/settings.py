@@ -15,6 +15,11 @@ if not JWT_SECRET_KEY:
 
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000").rstrip("/")
+ADMIN_USERNAMES = {
+    username.strip()
+    for username in os.getenv("ADMIN_USERNAMES", "").split(",")
+    if username.strip()
+}
 
 SMTP_HOST = os.getenv("SMTP_HOST", "")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))

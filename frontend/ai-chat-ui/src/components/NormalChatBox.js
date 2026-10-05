@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { Send } from "lucide-react";
 import ChatMessage from "./ChatMessage";
+import { API_BASE_URL } from "../services/authApi";
 
 export default function NormalChatBox({
   chatHistory,
@@ -31,7 +32,7 @@ export default function NormalChatBox({
 
     try {
       const response = await axios.post(
-        "http://localhost:8000/query/",
+        `${API_BASE_URL}/query/`,
         {
           query: prompt,
           mode: "chat",

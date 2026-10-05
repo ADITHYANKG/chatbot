@@ -1,5 +1,6 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "../services/authApi";
 
 const NormalChatHistory = forwardRef(({ selectedSessionId, onSelectChat }, ref) => {
   const [sessions, setSessions] = useState([]);
@@ -9,7 +10,7 @@ const NormalChatHistory = forwardRef(({ selectedSessionId, onSelectChat }, ref) 
     if (!token) return;
 
     try {
-      const response = await axios.get("http://localhost:8000/chat-history", {
+      const response = await axios.get(`${API_BASE_URL}/chat-history`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSessions(response.data);

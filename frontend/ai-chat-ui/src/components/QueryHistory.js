@@ -2,6 +2,7 @@ import React, { useEffect,useContext, useState, forwardRef, useImperativeHandle 
 import axios from "axios";
 import { Database, FileText, Search } from "lucide-react";
 import { ThemeProvider, ThemeContext } from "../context/ThemeContext";
+import { API_BASE_URL } from "../services/authApi";
 const QueryHistory = forwardRef(({ onSelectquery,setSelectedSessionId,selectedSessionId,setdatabasename}, ref) => {
   const [query, setquery] = useState([]);
   
@@ -13,7 +14,7 @@ const QueryHistory = forwardRef(({ onSelectquery,setSelectedSessionId,selectedSe
     if (!token) return;
     
     try {
-      const response = await axios.get("http://localhost:8000/db-history", {
+      const response = await axios.get(`${API_BASE_URL}/db-history`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setquery(response.data);

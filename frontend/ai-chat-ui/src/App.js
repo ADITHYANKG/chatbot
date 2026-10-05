@@ -19,7 +19,9 @@ import DbChatBox from "./components/DbchatBox";
 import QueryHistory from "./components/QueryHistory"
 import NormalChatBox from "./components/NormalChatBox";
 import NormalChatHistory from "./components/NormalChatHistory";
-import { Bot, Database, FileText, Image as ImageIcon, LogOut, Menu, MessageSquare, Moon, Plus, Sun } from "lucide-react";
+import { Bot, Database, FileText, Image as ImageIcon, LogOut, Menu, MessageSquare, Moon, Plus, Shield, Sun } from "lucide-react";
+import { API_BASE_URL } from "./services/authApi";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const getUsernameFromToken = (token) => {
   try {
@@ -49,6 +51,7 @@ function ChatPage() {
   const [normalChatSessionId, setNormalChatSessionId] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(() => window.matchMedia("(min-width: 768px)").matches);
+  const [isAdmin, setIsAdmin] = useState(false);
   
 
   const [selectedSessionId, setSelectedSessionId] = useState(null);
@@ -68,6 +71,14 @@ function ChatPage() {
     desktopViewport.addEventListener("change", syncSidebarWithViewport);
     return () => desktopViewport.removeEventListener("change", syncSidebarWithViewport);
   }, []);
+
+  useEffect(() => {
+    if (!token) return;
+    fetch(`${API_BASE_URL}/user/`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((response) => response.ok ? response.json() : null)
+      .then((account) => setIsAdmin(Boolean(account?.is_admin)))
+      .catch(() => setIsAdmin(false));
+  }, [token]);
  
 
   const handlenewchat=()=>{
@@ -95,7 +106,7 @@ function ChatPage() {
   const handleFileSelect = async (file) => {
     setSelectedFile(file);
     try {
-      const fileContentResponse = await axios.get(`http://localhost:8000/files/${file.id}`, {
+      const fileContentResponse = await axios.get(`${API_BASE_URL}/files/${file.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       
@@ -108,7 +119,7 @@ function ChatPage() {
         });
       }
 
-      const chatHistoryResponse = await axios.get(`http://localhost:8000/chats/${file.id}`, {
+      const chatHistoryResponse = await axios.get(`${API_BASE_URL}/chats/${file.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -137,6 +148,7 @@ function ChatPage() {
         >
           <Menu size={20} aria-hidden="true" />
         </button>
+        <img className="app-brand-logo" src="/custom_logo.png" alt="ChatBot" />
       {mode === "chat" && <h2><MessageSquare size={20} aria-hidden="true" /> Normal Chat</h2>}
       {mode === "file" && <h2><FileText size={20} aria-hidden="true" /> AI Chat with File</h2>}
       {mode === "image" && <h2><ImageIcon size={20} aria-hidden="true" /> AI Image Generation</h2>}
@@ -176,6 +188,9 @@ function ChatPage() {
             <button className={`btn-gradient-violet  w-100 mb-2 ${mode === "database" ? "databasebutton":""}`}  onClick={() => setMode("database")}>
             <Database size={16} aria-hidden="true" /> Db Query
             </button>
+            {isAdmin && <button className="btn btn-outline-warning w-100 mb-2" onClick={() => navigate("/admin")}>
+              <Shield size={16} aria-hidden="true" /> Admin dashboard
+            </button>}
           </div>
           <div className="sidebar-scroll-area">
           {mode === "chat" && (
@@ -186,7 +201,7 @@ function ChatPage() {
                 setNormalChatSessionId(entry.session_id);
                 try {
                   const response = await axios.get(
-                    `http://localhost:8000/chat-history/${entry.session_id}`,
+                    `${API_BASE_URL}/chat-history/${entry.session_id}`,
                     { headers: { Authorization: `Bearer ${token}` } }
                   );
                   setNormalChatHistory(response.data.flatMap((turn) => [
@@ -225,7 +240,7 @@ function ChatPage() {
   onSelectquery={async (entry) => {
     const token = localStorage.getItem("token");
     try {
-      const res = await axios.get(`http://localhost:8000/db-history/${entry.session_id}`, {
+      const res = await axios.get(`${API_BASE_URL}/db-history/${entry.session_id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -322,6 +337,7 @@ function App() {
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/account/email" element={<AccountEmail />} />
             <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
           </Routes>
         </Router>
       </ThemeProvider>
@@ -330,5 +346,3 @@ function App() {
 }
 
 export default App;
-
-

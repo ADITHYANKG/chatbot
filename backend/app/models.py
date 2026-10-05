@@ -41,6 +41,8 @@ class User(Base):
     email = Column(String(320), nullable=True)
     email_verified = Column(Boolean, nullable=False, default=False)
     token_version = Column(Integer, nullable=False, default=0)
+    is_admin = Column(Boolean, nullable=False, default=False, server_default="0")
+    created_at = Column(DateTime, nullable=True, default=datetime.utcnow)
     __table_args__ = (Index("ix_users_email", "email", unique=True),)
     
     files = relationship("FileUpload", back_populates="user")
@@ -97,4 +99,3 @@ class PlainChatHistory(Base):
     query_text = Column(Text, nullable=False)
     response_text = Column(Text, nullable=False)
     timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
-    

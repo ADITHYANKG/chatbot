@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { Image as ImageIcon, Send, Sparkles } from "lucide-react";
+import { API_BASE_URL } from "../services/authApi";
 
 export default function ImageChatBox({ history, setHistory,promptHistoryRef }) {
   const [prompt, setPrompt] = useState("");
@@ -24,7 +25,7 @@ export default function ImageChatBox({ history, setHistory,promptHistoryRef }) {
     setLoading(true);
     try {
       console.log("url2")
-      const res = await axios.post("http://localhost:8000/query/", { prompt ,mode:"image"}, {
+      const res = await axios.post(`${API_BASE_URL}/query/`, { prompt ,mode:"image"}, {
         headers: { Authorization: `Bearer ${token}`}}
       );
       const base64 = res.data.image_url;

@@ -80,6 +80,7 @@ import { useNavigate, Link } from "react-router-dom";
 import PasswordInput from "../components/PasswordInput";
 import { PASSWORD_REQUIREMENTS_MESSAGE, passwordMeetsRequirements } from "../utils/passwordPolicy";
 import { UserPlus } from "lucide-react";
+import { API_BASE_URL } from "../services/authApi";
 
 export default function Register() {
   const { darkMode } = useContext(ThemeContext);
@@ -103,7 +104,7 @@ export default function Register() {
     formData.append("email", email);
 
     try {
-      const response = await fetch("http://localhost:8000/register/", {
+      const response = await fetch(`${API_BASE_URL}/register/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
@@ -130,6 +131,7 @@ export default function Register() {
         className="auth-card p-4 rounded-4 shadow-lg"
         style={{ backgroundColor: darkMode ? "#1f1f1f" : "#fff" }}
       >
+        <img className={`auth-brand-logo ${darkMode ? "dark" : "light"}`} src="/custom_logo.png" alt="ChatBot" />
         <h3 className="text-center mb-2"><UserPlus size={22} aria-hidden="true" /> Create Your Account</h3>
         <p className="text-center text-muted mb-4">Join and start chatting with AI</p>
 

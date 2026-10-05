@@ -2,6 +2,7 @@ import React, { useEffect,useContext, useState, forwardRef, useImperativeHandle 
 import axios from "axios";
 import { FileText, FolderOpen, Search } from "lucide-react";
 import { ThemeProvider, ThemeContext } from "../context/ThemeContext";
+import { API_BASE_URL } from "../services/authApi";
 const FileHistory = forwardRef(({ onSelectFile }, ref) => {
   const [files, setFiles] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -12,7 +13,7 @@ const FileHistory = forwardRef(({ onSelectFile }, ref) => {
     if (!token) return;
     
     try {
-      const response = await axios.get("http://localhost:8000/files/", {
+      const response = await axios.get(`${API_BASE_URL}/files/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setFiles(response.data);
@@ -33,11 +34,11 @@ const FileHistory = forwardRef(({ onSelectFile }, ref) => {
     const token = localStorage.getItem("token");
 
     try {
-      const fileContentResponse = await axios.get(`http://localhost:8000/files/${file.id}`, {
+      const fileContentResponse = await axios.get(`${API_BASE_URL}/files/${file.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const chatHistoryResponse = await axios.get(`http://localhost:8000/chats/${file.id}`, {
+      const chatHistoryResponse = await axios.get(`${API_BASE_URL}/chats/${file.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
      

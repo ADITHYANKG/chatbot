@@ -94,6 +94,7 @@ export default function Login() {
         className="auth-card p-4 rounded-4 shadow-lg"
         style={{ backgroundColor: darkMode ? "#1f1f1f" : "#fff" }}
       >
+        <img className={`auth-brand-logo ${darkMode ? "dark" : "light"}`} src="/custom_logo.png" alt="ChatBot" />
         <h3 className="text-center mb-4"><Bot size={22} aria-hidden="true" /> Login to ChatBot</h3>
         {location.state?.notice && <p className="alert alert-info">{location.state.notice}</p>}
         <form onSubmit={handleLogin}>

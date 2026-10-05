@@ -24,6 +24,7 @@ export default function ForgotPassword() {
   return (
     <div className={`min-vh-100 d-flex align-items-center justify-content-center ${darkMode ? "bg-dark text-light" : "bg-light text-dark"}`}>
       <section className="p-4 rounded-4 shadow-lg" style={{ width: "min(100% - 2rem, 420px)", backgroundColor: darkMode ? "#1f1f1f" : "#fff" }}>
+        <img className={`auth-brand-logo ${darkMode ? "dark" : "light"}`} src="/custom_logo.png" alt="ChatBot" />
         <h3 className="text-center mb-3">Reset your password</h3>
         <p className="text-muted">Enter the verified email address on your account.</p>
         <form onSubmit={handleSubmit}>

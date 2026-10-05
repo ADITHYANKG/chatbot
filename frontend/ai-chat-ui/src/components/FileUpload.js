@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { Upload } from "lucide-react";
+import { API_BASE_URL } from "../services/authApi";
 
 export default function FileUpload({ setFileContent, setIsTabular, setTableData, onUploadSuccess }) {
   const [loading, setLoading] = useState(false);
@@ -41,7 +42,7 @@ export default function FileUpload({ setFileContent, setIsTabular, setTableData,
     formData.append("file", file);
 
     try {
-      const response = await axios.post("http://localhost:8000/upload/", formData, {
+      const response = await axios.post(`${API_BASE_URL}/upload/`, formData, {
         headers: { 
           Authorization: `Bearer ${token}`,
         },

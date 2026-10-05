@@ -3,6 +3,7 @@ import axios from "axios";
 import { ThemeContext } from "../context/ThemeContext";
 import { Database, Send } from "lucide-react";
 import ChatMessage from "./ChatMessage";
+import { API_BASE_URL } from "../services/authApi";
 
 export default function DbChatBox({dbHistory, setDbHistory,QueryHistoryRef,selectedSessionId,setSelectedSessionId,databasename,setdatabasename}) {
   const [query, setQuery] = useState("");
@@ -25,7 +26,7 @@ export default function DbChatBox({dbHistory, setDbHistory,QueryHistoryRef,selec
   }
 
   try {
-    const response = await axios.post("http://localhost:8000/connect/", {
+    const response = await axios.post(`${API_BASE_URL}/connect/`, {
       db_config: {
         MYSQL_HOST: config.hostname,
         MYSQL_PORT: config.port,
@@ -133,7 +134,7 @@ export default function DbChatBox({dbHistory, setDbHistory,QueryHistoryRef,selec
     
     let status="error"
     try {
-      const response = await axios.post("http://localhost:8000/connect/", {
+      const response = await axios.post(`${API_BASE_URL}/connect/`, {
         db_config: {
           MYSQL_HOST: config.hostname,
           MYSQL_PORT: config.port,
@@ -230,7 +231,7 @@ export default function DbChatBox({dbHistory, setDbHistory,QueryHistoryRef,selec
      console.log("progresspercentage=",progressPercent)
     setdeloading(true)
     try {
-      const response = await axios.post("http://localhost:8000/disconnect/",{},{ headers: { Authorization: `Bearer ${token}` } });
+      const response = await axios.post(`${API_BASE_URL}/disconnect/`,{},{ headers: { Authorization: `Bearer ${token}` } });
       // console.log("response=",response.data.status)
       if (response.data.status === "disconnected") {
         setConnected(false);
@@ -263,7 +264,7 @@ export default function DbChatBox({dbHistory, setDbHistory,QueryHistoryRef,selec
     try {
       console.log("sessionid=",sessionId)
       const response = await axios.post(
-        "http://localhost:8000/query/",
+        `${API_BASE_URL}/query/`,
         { query,mode:"database",session_id:sessionId,database:heading.toLowerCase() },
         { headers: { Authorization: `Bearer ${token}` } }
       );

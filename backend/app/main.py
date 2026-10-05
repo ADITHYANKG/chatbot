@@ -6,7 +6,7 @@ from models import EmailActionToken
 from auth import create_access_token, get_password_hash, verify_password_and_update, oauth2_scheme
 from email_service import send_email
 from schema_migrations import upgrade_database
-from settings import FRONTEND_URL, JWT_SECRET_KEY
+from settings import ADMIN_USERNAMES, FRONTEND_URL, JWT_SECRET_KEY
 from file_processor import extract_text_from_file
 from llm_client import query_ollama, connect_ollama_db, disconnect_ollama_db
 from fastapi.middleware.cors import CORSMiddleware
@@ -48,6 +48,12 @@ ALGORITHM = "HS256"
 # ✅ Ensure database tables are created
 Base.metadata.create_all(bind=engine)
 upgrade_database(engine)
+if ADMIN_USERNAMES:
+    with SessionLocal() as startup_db:
+        startup_db.query(User).filter(User.username.in_(ADMIN_USERNAMES)).update(
+            {User.is_admin: True}, synchronize_session=False
+        )
+        startup_db.commit()
 
 # ✅ Set File Upload Configurations
 UPLOAD_DIR = Path("uploads")
@@ -213,6 +219,12 @@ def get_current_user(user: User = Depends(get_authenticated_user)):
     return user
 
 
+def require_admin(user: User = Depends(get_current_user)):
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user
+
+
 # ✅ User Registration
 @app.post("/register/")
 def register(
@@ -263,7 +275,12 @@ def login(username: str = Form(...), password: str = Form(...), db: Session = De
     }
 @app.get("/user/")
 def get_user(user: User = Depends(get_authenticated_user)):
-    return {"username": user.username, "email": user.email, "email_verified": user.email_verified}
+    return {
+        "username": user.username,
+        "email": user.email,
+        "email_verified": user.email_verified,
+        "is_admin": user.is_admin,
+    }
 
 
 @app.post("/account/email/")
@@ -410,9 +427,66 @@ def get_user_id(user: User = Depends(get_current_user)):
 
 
 @app.get("/users/")
-def get_users(db: Session = Depends(get_db)):
+def get_users(_: User = Depends(require_admin), db: Session = Depends(get_db)):
     users = db.query(User).all()
     return [{"id": user.id, "username": user.username} for user in users]
+
+
+@app.get("/admin/users/")
+def list_admin_users(_: User = Depends(require_admin), db: Session = Depends(get_db)):
+    users = db.query(User).order_by(User.created_at.desc(), User.id.desc()).all()
+    return [
+        {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "email_verified": user.email_verified,
+            "is_admin": user.is_admin,
+            "created_at": user.created_at.replace(tzinfo=timezone.utc) if user.created_at else None,
+        }
+        for user in users
+    ]
+
+
+@app.delete("/admin/users/{user_id}/")
+def delete_admin_user(
+    user_id: int,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    target = db.query(User).filter(User.id == user_id).first()
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    if target.id == admin.id:
+        raise HTTPException(status_code=400, detail="You cannot delete your own admin account")
+    if target.is_admin:
+        raise HTTPException(status_code=400, detail="Admin accounts cannot be deleted from this dashboard")
+
+    target_id = target.id
+    file_rows = db.query(FileUpload).filter(FileUpload.user_id == target.id).all()
+    file_ids = [file_row.id for file_row in file_rows]
+    stored_paths = [file_row.file_path for file_row in file_rows]
+    db.query(ChatHistory).filter(ChatHistory.user_id == target.id).delete(synchronize_session=False)
+    if file_ids:
+        db.query(ChatHistory).filter(ChatHistory.file_id.in_(file_ids)).delete(synchronize_session=False)
+    db.query(PlainChatHistory).filter(PlainChatHistory.user_id == target.id).delete(synchronize_session=False)
+    db.query(DatabaseQuery).filter(DatabaseQuery.user_id == target.id).delete(synchronize_session=False)
+    db.query(Image).filter(Image.user_id == target.id).delete(synchronize_session=False)
+    db.query(EmailActionToken).filter(EmailActionToken.user_id == target.id).delete(synchronize_session=False)
+    db.query(FileUpload).filter(FileUpload.user_id == target.id).delete(synchronize_session=False)
+    db.delete(target)
+    db.commit()
+
+    upload_root = UPLOAD_DIR.resolve()
+    for stored_path in stored_paths:
+        candidate = Path(stored_path).resolve()
+        if candidate.is_relative_to(upload_root) and candidate.is_file():
+            try:
+                candidate.unlink()
+            except OSError:
+                logger.warning("Could not remove upload file for deleted user %s", target_id)
+
+    return {"message": "User and associated account data deleted"}
 
 
 # ✅ Upload File & Extract Content

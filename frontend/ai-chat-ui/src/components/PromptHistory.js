@@ -64,6 +64,7 @@ import React, { useEffect,useContext, useState, forwardRef, useImperativeHandle 
 import axios from "axios";
 import { Image as ImageIcon, Search } from "lucide-react";
 import { ThemeProvider, ThemeContext } from "../context/ThemeContext";
+import { API_BASE_URL } from "../services/authApi";
 const PromptHistory = forwardRef(({ onSelectPrompt }, ref) => {
   const [prompts, setPrompts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -74,7 +75,7 @@ const PromptHistory = forwardRef(({ onSelectPrompt }, ref) => {
     if (!token) return;
     
     try {
-      const response = await axios.get("http://localhost:8000/image-prompts", {
+      const response = await axios.get(`${API_BASE_URL}/image-prompts`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPrompts(response.data);

@@ -35,6 +35,7 @@ jobs:
         env:
           CI: false
           GENERATE_SOURCEMAP: false
+          REACT_APP_API_BASE_URL: https://botlocalai.duckdns.org/api
         run: npm run build
 
 

@@ -266,7 +266,7 @@ export default function DbChatBox({dbHistory, setDbHistory,QueryHistoryRef,selec
       const response = await axios.post(
         `${API_BASE_URL}/query/`,
         { query,mode:"database",session_id:sessionId,database:heading.toLowerCase() },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}`, "X-OpenRouter-API-Key": localStorage.getItem("openrouter_api_key") || "" } }
       );
       setDbHistory([...newMessages, { role: "ai", content: response.data.response }]);
     } catch (error) {

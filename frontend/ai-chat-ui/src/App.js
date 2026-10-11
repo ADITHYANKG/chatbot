@@ -19,7 +19,7 @@ import DbChatBox from "./components/DbchatBox";
 import QueryHistory from "./components/QueryHistory"
 import NormalChatBox from "./components/NormalChatBox";
 import NormalChatHistory from "./components/NormalChatHistory";
-import { Bot, Database, FileText, Image as ImageIcon, LogOut, Menu, MessageSquare, Moon, Plus, Shield, Sun } from "lucide-react";
+import { Bot, Database, FileText, Image as ImageIcon, KeyRound, LogOut, Menu, MessageSquare, Moon, Plus, Settings, Shield, Sun } from "lucide-react";
 import { API_BASE_URL } from "./services/authApi";
 import AdminDashboard from "./pages/AdminDashboard";
 
@@ -51,6 +51,9 @@ function ChatPage() {
   const [normalChatSessionId, setNormalChatSessionId] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(() => window.matchMedia("(min-width: 768px)").matches);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [apiKeyModalOpen, setApiKeyModalOpen] = useState(false);
+  const [apiKeyInput, setApiKeyInput] = useState(() => localStorage.getItem("openrouter_api_key") || "");
   const [isAdmin, setIsAdmin] = useState(false);
   
 
@@ -149,10 +152,12 @@ function ChatPage() {
           <Menu size={20} aria-hidden="true" />
         </button>
         <img className="app-brand-logo" src="/custom_logo.png" alt="ChatBot" />
-      {mode === "chat" && <h2><MessageSquare size={20} aria-hidden="true" /> Normal Chat</h2>}
-      {mode === "file" && <h2><FileText size={20} aria-hidden="true" /> AI Chat with File</h2>}
-      {mode === "image" && <h2><ImageIcon size={20} aria-hidden="true" /> AI Image Generation</h2>}
-      {mode === "database" && <h2><Database size={20} aria-hidden="true" /> AI Query Database</h2>}
+      <h2 className="app-mode-title">
+        {mode === "chat" && <><MessageSquare size={22} aria-hidden="true" /> General Chat</>}
+        {mode === "file" && <><FileText size={22} aria-hidden="true" /> Chat with Files</>}
+        {mode === "image" && <><ImageIcon size={22} aria-hidden="true" /> Image Generation</>}
+        {mode === "database" && <><Database size={22} aria-hidden="true" /> Database Assistant</>}
+      </h2>
         <div className="header-controls">
           <button
             onClick={toggleTheme}
@@ -162,33 +167,32 @@ function ChatPage() {
           >
             {darkMode ? <Sun size={18} aria-hidden="true" /> : <Moon size={18} aria-hidden="true" />}
           </button>
-          <button onClick={handleLogout} className="btn btn-sm btn-danger">
-            <LogOut size={16} aria-hidden="true" /> <span className="header-logout-label">Logout</span>
-          </button>
         </div>
       </header>
 
       <div className="app-body">
         <aside id="chat-sidebar" className={`sidebar ${sidebarOpen ? "open" : "collapsed"} border-end` } >
           <div className="sidebar-header ">
-            <button className="btn btn-outline-primary w-100 mb-2" onClick={handlenewchat}>
+            <button className="sidebar-nav-button w-100 mb-2" onClick={handlenewchat}>
               <Plus size={16} aria-hidden="true" /> New Chat
             </button>
             {/* <input type="text" className="form-control mb-2" placeholder="🔍 Search..." /> */}
-             <button className={`btn-gradient-violet w-100 mb-2 ${mode === "chat" ? "chatbutton" : ""}`} onClick={() => setMode("chat")}>
+             <button className={`sidebar-nav-button w-100 mb-2 ${mode === "chat" ? "active" : ""}`} onClick={() => setMode("chat")}>
               <MessageSquare size={16} aria-hidden="true" />
-              General Chat
+              General chat
             </button>
-            <button className={`btn-gradient-violet  w-100 mb-2 ${mode === "file"?( "filebutton"):""}`} onClick={() => setMode("file")}>
-              <FileText size={16} aria-hidden="true" /> File Chat
+            <button className={`sidebar-nav-button w-100 mb-2 ${mode === "file" ? "active" : ""}`} onClick={() => setMode("file")}>
+              <FileText size={16} aria-hidden="true" /> Chat with files
             </button>
-            <button className={`btn-gradient-violet file  w-100 mb-2 ${mode === "image" ? "imagebutton":"" }`}  onClick={() => setMode("image")}>
-              <ImageIcon size={16} aria-hidden="true" /> Image Engine
+            <button className={`sidebar-nav-button w-100 mb-2 ${mode === "image" ? "active" : ""}`} onClick={() => setMode("image")}>
+              <ImageIcon size={16} aria-hidden="true" /> Image generator
             </button>
+            {/* Db Query navigation is temporarily hidden; restore this button when the feature is in use again.
             <button className={`btn-gradient-violet  w-100 mb-2 ${mode === "database" ? "databasebutton":""}`}  onClick={() => setMode("database")}>
-            <Database size={16} aria-hidden="true" /> Db Query
+              <Database size={16} aria-hidden="true" /> Db Query
             </button>
-            {isAdmin && <button className="btn btn-outline-warning w-100 mb-2" onClick={() => navigate("/admin")}>
+            */}
+            {isAdmin && <button className="sidebar-nav-button w-100 mb-2" onClick={() => navigate("/admin")}>
               <Shield size={16} aria-hidden="true" /> Admin dashboard
             </button>}
           </div>
@@ -262,13 +266,38 @@ function ChatPage() {
 
   }
           </div>
-          <div className="sidebar-user" title={username}>
-            <div className="sidebar-user-avatar" aria-hidden="true">
-              {username.charAt(0).toUpperCase()}
-            </div>
-            <span className="sidebar-user-name">{username}</span>
+          <div className="account-menu-container">
+            {accountMenuOpen && (
+              <div className="account-menu" role="menu" aria-label="Account actions">
+                <button className="account-menu-item" role="menuitem" onClick={() => { setAccountMenuOpen(false); setApiKeyModalOpen(true); }}>
+                  <Settings size={18} aria-hidden="true" /><span>Settings</span>
+                </button>
+                <button className="account-menu-item" role="menuitem" onClick={handleLogout}>
+                  <LogOut size={18} aria-hidden="true" /><span>Log out</span>
+                </button>
+              </div>
+            )}
+            <button className="sidebar-user" title={username} aria-expanded={accountMenuOpen} onClick={() => setAccountMenuOpen((open) => !open)}>
+              <span className="sidebar-user-avatar" aria-hidden="true">{username.charAt(0).toUpperCase()}</span>
+              <span className="sidebar-user-name">{username}</span>
+            </button>
           </div>
         </aside>
+        {apiKeyModalOpen && (
+          <div className="api-key-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setApiKeyModalOpen(false); }}>
+            <section className="api-key-modal" role="dialog" aria-modal="true" aria-labelledby="api-key-title">
+              <h2 id="api-key-title"><KeyRound size={20} aria-hidden="true" /> OpenRouter API key</h2>
+              <p>Stored in this browser and used for your AI requests. Leave blank to use the server's configured key.</p>
+              <label htmlFor="openrouter-api-key">API key</label>
+              <input id="openrouter-api-key" type="password" autoComplete="off" value={apiKeyInput} onChange={(event) => setApiKeyInput(event.target.value)} placeholder="sk-or-v1-..." />
+              <div className="api-key-modal-actions">
+                <button className="api-key-clear" onClick={() => { localStorage.removeItem("openrouter_api_key"); setApiKeyInput(""); }}>Remove key</button>
+                <button className="api-key-cancel" onClick={() => setApiKeyModalOpen(false)}>Cancel</button>
+                <button className="api-key-save" onClick={() => { const key = apiKeyInput.trim(); if (key) localStorage.setItem("openrouter_api_key", key); else localStorage.removeItem("openrouter_api_key"); setApiKeyModalOpen(false); }}>Save</button>
+              </div>
+            </section>
+          </div>
+        )}
         {sidebarOpen && (
           <button
             className="mobile-sidebar-backdrop"

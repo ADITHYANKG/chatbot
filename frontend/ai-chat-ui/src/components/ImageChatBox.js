@@ -26,7 +26,7 @@ export default function ImageChatBox({ history, setHistory,promptHistoryRef }) {
     try {
       console.log("url2")
       const res = await axios.post(`${API_BASE_URL}/query/`, { prompt ,mode:"image"}, {
-        headers: { Authorization: `Bearer ${token}`}}
+        headers: { Authorization: `Bearer ${token}`, "X-OpenRouter-API-Key": localStorage.getItem("openrouter_api_key") || "" }}
       );
       const base64 = res.data.image_url;
       console.log("url3")

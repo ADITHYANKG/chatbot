@@ -593,6 +593,7 @@ async def query_llm(request: Request, user: User = Depends(get_current_user), db
         user_query=query,
         mode=mode,
         conversation_history=conversation_history if mode == "chat" else None,
+        api_key=request.headers.get("X-OpenRouter-API-Key"),
     )  # ✅ Pass extracted content to LLM
     
    

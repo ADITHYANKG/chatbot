@@ -29,7 +29,7 @@ export default function ChatBox({ selectedFile, chatHistory, setChatHistory, onF
       const response = await axios.post(
         `${API_BASE_URL}/query/`,
         { query, file_id: selectedFile.id,mode:"file" },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}`, "X-OpenRouter-API-Key": localStorage.getItem("openrouter_api_key") || "" } }
       );
       setChatHistory([...newMessages, { role: "ai", content: response.data.response }]);
     } catch (error) {

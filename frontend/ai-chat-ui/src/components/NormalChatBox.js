@@ -38,7 +38,7 @@ export default function NormalChatBox({
           mode: "chat",
           ...(sessionId ? { session_id: sessionId } : {}),
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}`, "X-OpenRouter-API-Key": localStorage.getItem("openrouter_api_key") || "" } }
       );
       setSessionId(response.data.session_id);
       setChatHistory([

@@ -16,15 +16,16 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
-def _request(messages: list[dict]) -> str:
-    if not OPENROUTER_API_KEY:
+def _request(messages: list[dict], api_key: str | None = None) -> str:
+    effective_api_key = api_key or OPENROUTER_API_KEY
+    if not effective_api_key:
         return "OpenRouter is not configured. Set OPENROUTER_API_KEY and restart the backend."
 
     try:
         response = requests.post(
             OPENROUTER_URL,
             headers={
-                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Authorization": f"Bearer {effective_api_key}",
                 "Content-Type": "application/json",
                 "HTTP-Referer": OPENROUTER_SITE_URL,
                 "X-Title": OPENROUTER_SITE_NAME,
@@ -57,6 +58,7 @@ def query_ollama(
     user_query: str,
     mode: str,
     conversation_history: list[dict] | None = None,
+    api_key: str | None = None,
 ):
     if mode == "image":
         return "Image generation is not configured for this OpenRouter text client."
@@ -78,4 +80,4 @@ def query_ollama(
             {"role": "user", "content": user_query},
         ]
 
-    return _request(messages)
+    return _request(messages, api_key=api_key)

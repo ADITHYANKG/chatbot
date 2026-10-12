@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { Send } from "lucide-react";
 import ChatMessage from "./ChatMessage";
+import ModelInfoButton from "./ModelInfoButton";
 import { API_BASE_URL } from "../services/authApi";
 
 export default function NormalChatBox({
@@ -9,6 +10,7 @@ export default function NormalChatBox({
   setChatHistory,
   sessionId,
   setSessionId,
+  modelName,
   onConversationSaved,
 }) {
   const [query, setQuery] = useState("");
@@ -77,14 +79,17 @@ export default function NormalChatBox({
       </div>
 
       <form onSubmit={handleQuery} className="chat-input-bar">
-        <input
-          type="text"
-          aria-label="Message"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Ask anything..."
-          disabled={loading}
-        />
+        <div className="chat-input-field">
+          <input
+            type="text"
+            aria-label="Message"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Ask anything..."
+            disabled={loading}
+          />
+          <ModelInfoButton modelName={modelName} />
+        </div>
         <button type="submit" aria-label="Send message" disabled={loading || !query.trim()}>
           <Send size={18} aria-hidden="true" />
         </button>

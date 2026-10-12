@@ -14,7 +14,7 @@ postman/
 
 ## Run locally
 
-Install backend dependencies with `pip install -r backend/requirements.txt`.
+Install backend dependencies with `pip install -r backend/requirements.txt`. Image generation uses AI Horde community workers and works anonymously by default. Set `AI_HORDE_API_KEY` in `backend/app/.env` to use a registered account key, and optionally set `AI_HORDE_MODEL` to restrict generation to a specific available model. `AI_HORDE_MAX_WAIT_SECONDS` controls the queue timeout (defaults to 180 seconds); timed-out requests are cancelled. Anonymous requests may be shared with the AI Horde community; avoid sending private prompts. Community worker availability affects generation time.
 Run the backend from `backend/app` with `uvicorn main:app --reload`.
 
 Install frontend dependencies with `npm install` from `frontend/ai-chat-ui`, then use `npm start`.

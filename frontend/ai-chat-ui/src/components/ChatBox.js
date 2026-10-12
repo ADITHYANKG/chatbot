@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { Paperclip, Send } from "lucide-react";
 import ChatMessage from "./ChatMessage";
+import ModelInfoButton from "./ModelInfoButton";
 import { API_BASE_URL } from "../services/authApi";
 
-export default function ChatBox({ selectedFile, chatHistory, setChatHistory, onFileUploadSuccess }) {
+export default function ChatBox({ selectedFile, chatHistory, setChatHistory, onFileUploadSuccess, modelName }) {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const token = localStorage.getItem("token");
@@ -91,13 +92,16 @@ export default function ChatBox({ selectedFile, chatHistory, setChatHistory, onF
         </label>
 
         {/* Input */}
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Type your message..."
-          disabled={loading || !selectedFile}
-        />
+        <div className="chat-input-field">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Type your message..."
+            disabled={loading || !selectedFile}
+          />
+          <ModelInfoButton modelName={modelName} />
+        </div>
 
         {/* Send */}
         <button type="submit" aria-label="Send message" disabled={loading || !selectedFile}>

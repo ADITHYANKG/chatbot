@@ -1,5 +1,7 @@
 import logging
 import os
+import base64
+import time
 
 import requests
 from dotenv import load_dotenv
@@ -9,11 +11,107 @@ load_dotenv()
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini")
+AI_HORDE_API_URL = "https://aihorde.net/api/v2"
+AI_HORDE_API_KEY = os.getenv("AI_HORDE_API_KEY") or "0000000000"
+AI_HORDE_MODEL = os.getenv("AI_HORDE_MODEL", "").strip()
+AI_HORDE_IMAGE_MODEL = AI_HORDE_MODEL or "AI Horde (community workers)"
+AI_HORDE_MAX_WAIT_SECONDS = max(30, int(os.getenv("AI_HORDE_MAX_WAIT_SECONDS", "180")))
 OPENROUTER_SITE_URL = os.getenv("OPENROUTER_SITE_URL", "http://localhost:3000")
 OPENROUTER_SITE_NAME = os.getenv("OPENROUTER_SITE_NAME", "Local AI Chat")
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
+
+
+def generate_horde_image(prompt: str) -> dict:
+    started_at = time.monotonic()
+    headers = {
+        "apikey": AI_HORDE_API_KEY,
+        "Client-Agent": "LocalAIChat:1.0:github.com/Haidra-Org/AI-Horde",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "prompt": prompt,
+        "params": {"width": 512, "height": 512, "steps": 20, "n": 1},
+        "nsfw": False,
+        "censor_nsfw": True,
+        "r2": True,
+    }
+    if AI_HORDE_MODEL:
+        payload["models"] = [AI_HORDE_MODEL]
+
+    try:
+        response = requests.post(
+            f"{AI_HORDE_API_URL}/generate/async",
+            headers=headers,
+            json=payload,
+            timeout=30,
+        )
+        response.raise_for_status()
+        request_id = response.json().get("id")
+        if not request_id:
+            raise RuntimeError("AI Horde did not return a generation request ID.")
+
+        deadline = time.monotonic() + AI_HORDE_MAX_WAIT_SECONDS
+        while time.monotonic() < deadline:
+            remaining = deadline - time.monotonic()
+            status_response = requests.get(
+                f"{AI_HORDE_API_URL}/generate/check/{request_id}",
+                headers=headers,
+                timeout=min(15, max(1, remaining)),
+            )
+            status_response.raise_for_status()
+            status = status_response.json()
+            if status.get("faulted"):
+                raise RuntimeError("AI Horde could not complete this image request. Please try again.")
+            if status.get("done"):
+                result_response = requests.get(
+                    f"{AI_HORDE_API_URL}/generate/status/{request_id}",
+                    headers=headers,
+                    timeout=min(15, max(1, deadline - time.monotonic())),
+                )
+                result_response.raise_for_status()
+                generations = result_response.json().get("generations", [])
+                image_url = generations[0].get("img") if generations else None
+                if not image_url:
+                    raise RuntimeError("AI Horde completed the request without returning an image.")
+                image_response = requests.get(image_url, timeout=30)
+                image_response.raise_for_status()
+                content_type = image_response.headers.get("Content-Type", "image/webp").split(";", 1)[0]
+                if not content_type.startswith("image/"):
+                    raise RuntimeError("AI Horde returned an invalid image download.")
+                persistent_image = (
+                    f"data:{content_type};base64,"
+                    + base64.b64encode(image_response.content).decode("ascii")
+                )
+                return {
+                    "image_url": persistent_image,
+                    "usage": None,
+                    "generation_time_seconds": round(time.monotonic() - started_at, 1),
+                }
+            time.sleep(min(3, max(0, deadline - time.monotonic())))
+
+        try:
+            requests.delete(
+                f"{AI_HORDE_API_URL}/generate/status/{request_id}",
+                headers=headers,
+                timeout=5,
+            ).raise_for_status()
+        except requests.RequestException:
+            logger.warning("Could not cancel timed-out AI Horde request %s", request_id)
+        wait_limit = (
+            f"{AI_HORDE_MAX_WAIT_SECONDS // 60} minutes"
+            if AI_HORDE_MAX_WAIT_SECONDS >= 60
+            else f"{AI_HORDE_MAX_WAIT_SECONDS} seconds"
+        )
+        raise RuntimeError(
+            f"AI Horde did not finish within {wait_limit}. "
+            "The request was cancelled; please try again later."
+        )
+    except Exception as error:
+        logger.exception("AI Horde image generation failed")
+        detail = str(error).strip()
+        raise RuntimeError(detail or "AI Horde image generation failed. Please try again.") from error
 
 
 def _result(content: str, usage: dict | None = None) -> dict:

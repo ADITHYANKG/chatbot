@@ -3,9 +3,10 @@ import axios from "axios";
 import { ThemeContext } from "../context/ThemeContext";
 import { Database, Send } from "lucide-react";
 import ChatMessage from "./ChatMessage";
+import ModelInfoButton from "./ModelInfoButton";
 import { API_BASE_URL } from "../services/authApi";
 
-export default function DbChatBox({dbHistory, setDbHistory,QueryHistoryRef,selectedSessionId,setSelectedSessionId,databasename,setdatabasename}) {
+export default function DbChatBox({dbHistory, setDbHistory,QueryHistoryRef,selectedSessionId,setSelectedSessionId,databasename,setdatabasename,modelName}) {
   const [query, setQuery] = useState("");
   const token = localStorage.getItem("token");
   const [loading, setLoading] = useState(false);
@@ -523,13 +524,16 @@ console.log("openform=",openform)
       </div>}
   {/* 🧠 Input Area */}
       <form onSubmit={handleQuery} className="chat-input-bar">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Type your database query..."
-          disabled={loading || !connected ||isBlocked}
-        />
+        <div className="chat-input-field">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Type your database query..."
+            disabled={loading || !connected ||isBlocked}
+          />
+          <ModelInfoButton modelName={modelName} />
+        </div>
         <button type="submit" disabled={loading || !connected }>
           <Send size={18} aria-hidden="true" />
         </button>

@@ -55,6 +55,7 @@ function ChatPage() {
   const [apiKeyModalOpen, setApiKeyModalOpen] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState(() => localStorage.getItem("openrouter_api_key") || "");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [configuredModels, setConfiguredModels] = useState(null);
   
 
   const [selectedSessionId, setSelectedSessionId] = useState(null);
@@ -81,6 +82,16 @@ function ChatPage() {
       .then((response) => response.ok ? response.json() : null)
       .then((account) => setIsAdmin(Boolean(account?.is_admin)))
       .catch(() => setIsAdmin(false));
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    let active = true;
+    authenticatedFetch(`${API_BASE_URL}/config/models`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((response) => response.ok ? response.json() : null)
+      .then((models) => { if (active) setConfiguredModels(models); })
+      .catch(() => { if (active) setConfiguredModels(null); });
+    return () => { active = false; };
   }, [token]);
  
 
@@ -153,10 +164,12 @@ function ChatPage() {
         </button>
         <img className="app-brand-logo" src="/custom_logo.png" alt="ChatBot" />
       <h2 className="app-mode-title">
-        {mode === "chat" && <><MessageSquare size={22} aria-hidden="true" /> General Chat</>}
-        {mode === "file" && <><FileText size={22} aria-hidden="true" /> Chat with Files</>}
-        {mode === "image" && <><ImageIcon size={22} aria-hidden="true" /> Image Generation</>}
-        {mode === "database" && <><Database size={22} aria-hidden="true" /> Database Assistant</>}
+        <span className="app-mode-heading">
+          {mode === "chat" && <><MessageSquare size={22} aria-hidden="true" /> General Chat</>}
+          {mode === "file" && <><FileText size={22} aria-hidden="true" /> Chat with Files</>}
+          {mode === "image" && <><ImageIcon size={22} aria-hidden="true" /> Image Generation</>}
+          {mode === "database" && <><Database size={22} aria-hidden="true" /> Database Assistant</>}
+        </span>
       </h2>
         <div className="header-controls">
           <button
@@ -225,7 +238,7 @@ function ChatPage() {
     ref={promptHistoryRef}
     onSelectPrompt={(entry) => {
       // Ensure base64 prefix is present
-      if (!entry.image_url.startsWith("data:image")) {
+      if (!entry.image_url.startsWith("data:image") && !entry.image_url.startsWith("http")) {
         entry.image_url = `data:image/png;base64,${entry.image_url}`;
       }
   
@@ -313,6 +326,7 @@ function ChatPage() {
             setChatHistory={setNormalChatHistory}
             sessionId={normalChatSessionId}
             setSessionId={setNormalChatSessionId}
+            modelName={configuredModels?.chat}
             onConversationSaved={() => normalChatHistoryRef.current?.refreshChatList()}
           />
         )}
@@ -325,12 +339,14 @@ function ChatPage() {
               selectedFile={selectedFile}
               chatHistory={chatHistory}
               setChatHistory={setChatHistory}
+              modelName={configuredModels?.chat}
               onFileUploadSuccess={handleFileUploadSuccess}
                 />
        </> )}
         {mode==="image" &&(  <ImageChatBox
         history={imageHistory}
         setHistory={setImageHistory}
+        modelName={configuredModels?.image}
         promptHistoryRef={promptHistoryRef}
                />
         )}{mode==="database" &&(
@@ -342,6 +358,7 @@ function ChatPage() {
           QueryHistoryRef={QueryHistoryRef}
           dbHistory={dbHistory}
           setDbHistory={setDbHistory}
+          modelName={configuredModels?.chat}
           />
         )
 

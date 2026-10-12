@@ -1,11 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
-import { Image as ImageIcon, Send, Sparkles } from "lucide-react";
+import { Clock3, Image as ImageIcon, Send } from "lucide-react";
+import ModelInfoButton from "./ModelInfoButton";
 import { API_BASE_URL } from "../services/authApi";
 
-export default function ImageChatBox({ history, setHistory,promptHistoryRef }) {
+export default function ImageChatBox({ history, setHistory,promptHistoryRef, modelName }) {
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadedImageUrl, setLoadedImageUrl] = useState(null);
+  const [unavailableImageUrl, setUnavailableImageUrl] = useState(null);
   const token = localStorage.getItem("token");
   const bottomRef = useRef(null);
   
@@ -18,24 +21,25 @@ export default function ImageChatBox({ history, setHistory,promptHistoryRef }) {
     if (!prompt.trim()) return;
     
     const newPrompt = { prompt, image_url: null };
-    const updatedHistory = [newPrompt]; // overwrite old
-    setHistory(updatedHistory);
-    console.log("url")
+    setHistory([newPrompt]);
     setPrompt("");
     setLoading(true);
     try {
-      console.log("url2")
-      const res = await axios.post(`${API_BASE_URL}/query/`, { prompt ,mode:"image"}, {
-        headers: { Authorization: `Bearer ${token}`, "X-OpenRouter-API-Key": localStorage.getItem("openrouter_api_key") || "" }}
-      );
-      const base64 = res.data.image_url;
-      console.log("url3")
-      const imageUrl = `data:image/png;base64,${base64}`;
-      updatedHistory[updatedHistory.length - 1].image_url = imageUrl;
-      
-      setHistory([...updatedHistory]);
+      const res = await axios.post(`${API_BASE_URL}/query/`, { prompt, mode: "image" }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const imageUrl = res.data.image_url.startsWith("data:image") || res.data.image_url.startsWith("http")
+        ? res.data.image_url
+        : `data:image/png;base64,${res.data.image_url}`;
+      setHistory([{
+        ...newPrompt,
+        image_url: imageUrl,
+        usage: res.data.usage,
+        generation_time_seconds: res.data.generation_time_seconds,
+      }]);
     } catch (err) {
       console.error("Image gen error", err);
+      setHistory([{ ...newPrompt, error: err.response?.data?.detail || "Image generation failed. Please try again." }]);
     } finally {
       setLoading(false);
     }
@@ -51,68 +55,64 @@ export default function ImageChatBox({ history, setHistory,promptHistoryRef }) {
   
   return (
     <div className="chat-panel">
-  <div className="flex-grow-1 overflow-auto d-flex justify-content-center">
-    {history.length > 0 && (
-      <div className="w-100 d-flex flex-column align-items-center px-3  ">
-        <div className="w-100" style={{ maxWidth: "800px" }}>
-          {/* Prompt Bubble */}
-          <div className="prompt py-2 px-3 rounded-3" style={{ wordBreak: "break-word" }}>
-            <strong><Sparkles size={16} aria-hidden="true" /> Prompt:</strong> {history[history.length - 1].prompt}
-          </div>
-
-          {/* Image Box */}
-          {/* Image Box */}
-<div className="py-3">
-<div
-  className=" d-flex align-items-start justify-content-start"
-  style={{
-    width: "60%",
-    height: "450px",
-    position: "relative",
-    overflow: "hidden",
-     // Optional: to give space from edge
-  }}
->
-  {/* Loader */}
-  {loading && (
-    <div className="rounded shadow d-flex w-100 h-100 border border-secondary flex-column align-items-center justify-content-center gap-2">
-      <div className="spinner-border text-success" />
-      <span className="d-flex align-items-center gap-2"><ImageIcon size={16} aria-hidden="true" /> Generating image...</span>
-    </div>
-  )}
-
-  {/* Image */}
-  {!loading && history[history.length - 1].image_url && (
-    <img
-      src={history[history.length - 1].image_url}
-      alt="Can't load image"
-      className="img-fluid rounded"
-      style={{
-        maxHeight: "100%",
-        objectFit: "contain",
-      }}
-    />
-  )}
-</div>
-
-
-</div>
-
-
-        </div>
+      <div className="flex-grow-1 image-chat-messages">
+        {history.length > 0 && (() => {
+          const latest = history[history.length - 1];
+          const imageIsLoaded = Boolean(latest.image_url && loadedImageUrl === latest.image_url);
+          const imageIsUnavailable = Boolean(latest.image_url && unavailableImageUrl === latest.image_url);
+          return (
+            <>
+              <div className="chat-bubble user">{latest.prompt}</div>
+              <div className="image-generation-response">
+                {(loading || latest.image_url || (!latest.error && latest.prompt)) && (
+                  <div className={`image-generation-frame${imageIsLoaded ? " has-image" : ""}`}>
+                    {latest.image_url && (
+                      <img
+                        src={latest.image_url}
+                        alt={`Generated image: ${latest.prompt}`}
+                        onLoad={() => setLoadedImageUrl(latest.image_url)}
+                        onError={() => setUnavailableImageUrl(latest.image_url)}
+                      />
+                    )}
+                    {!imageIsLoaded && (
+                      <div className="image-generation-placeholder" role="status">
+                        <div className="image-placeholder-glow" />
+                        <div className="image-placeholder-icon"><ImageIcon size={27} aria-hidden="true" /></div>
+                        <strong>{loading ? "Creating your image" : imageIsUnavailable ? "Saved image unavailable" : latest.image_url ? "Loading your image" : "Image data unavailable"}</strong>
+                        <span>{loading ? "Waiting for an AI Horde community worker… We’ll stop after 3 minutes and show a warning." : imageIsUnavailable ? "This older image link may have expired. Generate the prompt again to restore it." : latest.image_url ? "Preparing the generated image…" : "Generate this prompt again to create and save its image."}</span>
+                        <div className="image-placeholder-skeleton" aria-hidden="true"><i /><i /><i /></div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {!loading && latest.error && <p className="image-generation-error">{latest.error}</p>}
+                {!loading && latest.image_url && Number.isFinite(latest.generation_time_seconds) && (
+                  <div className="image-generation-metadata">
+                    <Clock3 size={14} aria-hidden="true" />
+                    <span>
+                      Generated in {latest.generation_time_seconds >= 60
+                        ? `${Math.floor(latest.generation_time_seconds / 60)}m ${Math.round(latest.generation_time_seconds % 60)}s`
+                        : `${latest.generation_time_seconds.toFixed(1)}s`}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </>
+          );
+        })()}
+        <div ref={bottomRef} />
       </div>
-    )}
-
-    <div ref={bottomRef} />
-  </div>
 
   <form onSubmit={handleSubmit} className="chat-input-bar">
-    <input
-      type="text"
-      placeholder="Generate your image..."
-      value={prompt}
-      onChange={(e) => setPrompt(e.target.value)}
-    />
+    <div className="chat-input-field">
+      <input
+        type="text"
+        placeholder="Generate your image..."
+        value={prompt}
+        onChange={(e) => setPrompt(e.target.value)}
+      />
+      <ModelInfoButton modelName={modelName} />
+    </div>
     <button type="submit" disabled={loading}>
       <Send size={18} aria-hidden="true" />
     </button>

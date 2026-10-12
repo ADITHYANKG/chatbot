@@ -14,9 +14,17 @@ from settings import (
     JWT_SECRET_KEY,
 )
 from file_processor import extract_text_from_file
-from llm_client import query_ollama, connect_ollama_db, disconnect_ollama_db
+from llm_client import (
+    AI_HORDE_IMAGE_MODEL,
+    OPENROUTER_MODEL,
+    query_ollama,
+    generate_horde_image,
+    connect_ollama_db,
+    disconnect_ollama_db,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.concurrency import run_in_threadpool
 import logging
 import json
 from pathlib import Path
@@ -386,6 +394,11 @@ def get_user(user: User = Depends(get_authenticated_user)):
     }
 
 
+@app.get("/config/models")
+def get_configured_models(user: User = Depends(get_current_user)):
+    return {"chat": OPENROUTER_MODEL, "image": AI_HORDE_IMAGE_MODEL}
+
+
 @app.post("/account/email/")
 def update_account_email(
     request: Request,
@@ -666,6 +679,20 @@ async def query_llm(request: Request, user: User = Depends(get_current_user), db
         if not file:
             raise HTTPException(status_code=404,detail="file not found")
         file_text=file.extracted_content
+
+    if mode == "image":
+        try:
+            generated = await run_in_threadpool(generate_horde_image, prompt=query)
+        except RuntimeError as error:
+            raise HTTPException(status_code=502, detail=str(error)) from error
+
+        db.add(Image(user_id=user.id, prompt=query, image_url=generated["image_url"]))
+        db.commit()
+        return {
+            "image_url": generated["image_url"],
+            "usage": generated.get("usage"),
+            "generation_time_seconds": generated.get("generation_time_seconds"),
+        }
     
     session_id = None
     conversation_history = []
@@ -704,17 +731,7 @@ async def query_llm(request: Request, user: User = Depends(get_current_user), db
     
    
     # ✅ Store chat history with correct column names , and image history and db queries
-    if mode=="image":
-        new_image=Image(
-            user_id=user.id,
-            prompt=query,
-            image_url=response
-        
-        )
-        db.add(new_image)
-        db.commit()
-        return {"image_url":response}
-    elif mode=="file":
+    if mode=="file":
         new_chat = ChatHistory(
         file_id=file.id,
         user_id=user.id,

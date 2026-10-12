@@ -524,6 +524,39 @@ form.chat-input-bar button:hover:not(:disabled) {
   min-height: 0;
   padding: 0 0.75rem 1rem;
 }
+
+.normal-chat-history-heading {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0 -0.75rem;
+  padding: 0.8rem 0.75rem 0.65rem;
+  border-bottom: 1px solid #dedee3;
+  background: #f7f7f8;
+  color: #303038;
+}
+
+.dark-mode .normal-chat-history-heading {
+  border-bottom-color: #3a3a40;
+  background: #202123;
+  color: #f0f0f2;
+}
+
+.dark-mode .file-history .input-group-text,
+.dark-mode .file-history .form-control {
+  border-color: #45454d;
+  background: #303037;
+  color: #f0f0f2;
+}
+
+.dark-mode .file-history .form-control::placeholder {
+  color: #aaaab4;
+}
+
+.normal-chat-history-list {
+  margin-bottom: 0;
+}
+
 .account-menu-container {
   position: relative;
   flex-shrink: 0;

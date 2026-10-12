@@ -7,10 +7,17 @@ body, html {
   color: #1e1e1e;
 }
 
+#root {
+  height: 100%;
+  min-height: 0;
+}
+
 .app-wrapper {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  height: 100dvh;
+  min-height: 0;
   overflow: hidden;
   
 }
@@ -168,7 +175,8 @@ body, html {
 
 .main-content {
   flex-grow: 1;
-  min-width: 0; 
+  min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -187,6 +195,7 @@ body, html {
 
 .chat-panel {
   flex: 1;
+  min-height: 0;
   overflow: hidden;
   padding: 1rem;
   display: flex;
@@ -236,7 +245,8 @@ form.chat-input-bar {
   display: flex;
   gap: 0.5rem;
   margin-top: auto;
-  padding-top: 0.75rem;
+  padding: 0.75rem 0 max(0.25rem, env(safe-area-inset-bottom));
+  flex-shrink: 0;
 }
 
 form.chat-input-bar input[type="text"] {
@@ -463,9 +473,10 @@ form.chat-input-bar button:hover:not(:disabled) {
 
 .app-body {
   display: flex;
-  flex-grow: 1;
+  flex: 1 1 0;
+  min-height: 0;
   overflow: hidden;
-  height: 100%;
+  height: auto;
   position: relative;
   /* transition: all 0.5s ease-in-out; */
  /* smooth resizing */

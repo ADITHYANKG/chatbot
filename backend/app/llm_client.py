@@ -16,10 +16,14 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
-def _request(messages: list[dict], api_key: str | None = None) -> str:
+def _result(content: str, usage: dict | None = None) -> dict:
+    return {"content": content, "usage": usage}
+
+
+def _request(messages: list[dict], api_key: str | None = None) -> dict:
     effective_api_key = api_key or OPENROUTER_API_KEY
     if not effective_api_key:
-        return "OpenRouter is not configured. Set OPENROUTER_API_KEY and restart the backend."
+        return _result("OpenRouter is not configured. Set OPENROUTER_API_KEY and restart the backend.")
 
     try:
         response = requests.post(
@@ -30,16 +34,17 @@ def _request(messages: list[dict], api_key: str | None = None) -> str:
                 "HTTP-Referer": OPENROUTER_SITE_URL,
                 "X-Title": OPENROUTER_SITE_NAME,
             },
-            json={"model": OPENROUTER_MODEL, "messages": messages, "temperature": 0.2},
+            json={"model": OPENROUTER_MODEL, "messages": messages, "temperature": 0.2, "usage": {"include": True}},
             timeout=90,
         )
         response.raise_for_status()
-        return response.json()["choices"][0]["message"]["content"]
+        payload = response.json()
+        return _result(payload["choices"][0]["message"]["content"], payload.get("usage"))
     except requests.exceptions.Timeout:
-        return "Error: OpenRouter request timed out."
+        return _result("Error: OpenRouter request timed out.")
     except (requests.exceptions.RequestException, KeyError, IndexError, TypeError) as error:
         logger.exception("OpenRouter request failed: %s", error)
-        return f"Error connecting to OpenRouter: {error}"
+        return _result(f"Error connecting to OpenRouter: {error}")
 
 
 def connect_ollama_db(db_config: dict, fetch_mode: bool = False):
@@ -61,7 +66,7 @@ def query_ollama(
     api_key: str | None = None,
 ):
     if mode == "image":
-        return "Image generation is not configured for this OpenRouter text client."
+        return _result("Image generation is not configured for this OpenRouter text client.")
 
     if mode == "file":
         messages = [

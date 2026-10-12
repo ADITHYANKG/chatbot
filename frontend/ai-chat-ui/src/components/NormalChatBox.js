@@ -43,7 +43,7 @@ export default function NormalChatBox({
       setSessionId(response.data.session_id);
       setChatHistory([
         ...pendingMessages,
-        { role: "ai", content: response.data.response },
+        { role: "ai", content: response.data.response, usage: response.data.usage },
       ]);
       onConversationSaved?.();
     } catch (error) {

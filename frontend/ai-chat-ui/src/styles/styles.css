@@ -235,6 +235,30 @@ body, html {
   color: inherit;
 }
 
+.chat-panel .chat-usage {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.45rem;
+  color: var(--muted-text, #9aa3b2);
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+
+.chat-panel .chat-usage-cost {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.chat-panel .chat-usage-cost:hover {
+  color: var(--text-color, currentColor);
+  text-decoration: underline;
+}
+
 .chat-panel .chat-bubble.error {
   align-self: flex-start;
   color: #d9534f;

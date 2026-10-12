@@ -18,6 +18,7 @@ from llm_client import query_ollama, connect_ollama_db, disconnect_ollama_db
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import logging
+import json
 from pathlib import Path
 from jose import jwt
 import uuid
@@ -690,13 +691,16 @@ async def query_llm(request: Request, user: User = Depends(get_current_user), db
             )
         ]
 
-    response = query_ollama(
+    result = query_ollama(
         file_text=file_text,
         user_query=query,
         mode=mode,
         conversation_history=conversation_history if mode == "chat" else None,
         api_key=request.headers.get("X-OpenRouter-API-Key"),
     )  # ✅ Pass extracted content to LLM
+    response = result["content"]
+    usage = result.get("usage")
+    usage_json = json.dumps(usage) if usage else None
     
    
     # ✅ Store chat history with correct column names , and image history and db queries
@@ -715,12 +719,13 @@ async def query_llm(request: Request, user: User = Depends(get_current_user), db
         file_id=file.id,
         user_id=user.id,
         query_text=query,  # ✅ Corrected from 'message'
-        response_text=response  # ✅ Corrected from 'response'
+        response_text=response,  # ✅ Corrected from 'response'
+        usage_json=usage_json,
     )
         db.add(new_chat)
         db.commit()
         
-        return {"response": response}
+        return {"response": response, "usage": usage}
 
     elif mode == "chat":
         db.add(
@@ -729,10 +734,11 @@ async def query_llm(request: Request, user: User = Depends(get_current_user), db
                 session_id=session_id,
                 query_text=query,
                 response_text=response,
+                usage_json=usage_json,
             )
         )
         db.commit()
-        return {"response": response, "session_id": session_id}
+        return {"response": response, "session_id": session_id, "usage": usage}
 
     else:
         session_id = form_data.get("session_id")
@@ -747,13 +753,14 @@ async def query_llm(request: Request, user: User = Depends(get_current_user), db
             user_id=user.id,
             query_text=query,
             response_text=response,
+            usage_json=usage_json,
             session_id=session_id,
             database_name=database
         
         )
         db.add(new_db)
         db.commit()
-        return {"response":response}
+        return {"response": response, "usage": usage}
 
 
 @app.get("/chat-history")
@@ -799,6 +806,7 @@ def get_plain_chat_session(
         {
             "query": turn.query_text,
             "response": turn.response_text,
+            "usage": json.loads(turn.usage_json) if turn.usage_json else None,
             "time": turn.timestamp.isoformat(),
         }
         for turn in turns
@@ -822,7 +830,7 @@ def get_chat_history(file_id: int, user: User = Depends(get_current_user), db: S
     chat_list = []
     for chat in chats:
         chat_list.append({"role": "user", "content": chat.query_text})
-        chat_list.append({"role": "ai", "content": chat.response_text})
+        chat_list.append({"role": "ai", "content": chat.response_text, "usage": json.loads(chat.usage_json) if chat.usage_json else None})
     # logger.error(f"chat: {chat_list}")
     return chat_list
 
@@ -938,6 +946,7 @@ def get_queries_by_session(session_id: str, user: User = Depends(get_current_use
         {
             "query": q.query_text,
             "response": q.response_text,
+            "usage": json.loads(q.usage_json) if q.usage_json else None,
             "time": q.timestamp.isoformat()
         }
         for q in queries

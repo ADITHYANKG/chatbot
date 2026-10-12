@@ -11,6 +11,7 @@ class ChatHistory(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     query_text = Column(Text, nullable=False)  # ✅ Renamed from 'message' to 'query_text'
     response_text = Column(Text, nullable=False)  # ✅ Renamed from 'response' to 'response_text'
+    usage_json = Column(Text, nullable=True)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="chats")
@@ -99,6 +100,7 @@ class DatabaseQuery(Base):
     user_id=Column(Integer,ForeignKey("users.id"))
     query_text = Column(Text, nullable=False)  # ✅ Renamed from 'message' to 'query_text'
     response_text = Column(Text, nullable=False)  # ✅ Renamed from 'response' to 'response_text'
+    usage_json = Column(Text, nullable=True)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
 
@@ -110,4 +112,5 @@ class PlainChatHistory(Base):
     session_id = Column(String, nullable=False, index=True)
     query_text = Column(Text, nullable=False)
     response_text = Column(Text, nullable=False)
+    usage_json = Column(Text, nullable=True)
     timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)

@@ -210,7 +210,7 @@ function ChatPage() {
                   );
                   setNormalChatHistory(response.data.flatMap((turn) => [
                     { role: "user", content: turn.query },
-                    { role: "ai", content: turn.response },
+                    { role: "ai", content: turn.response, usage: turn.usage },
                   ]));
                 } catch (error) {
                   console.error("Failed to load chat session:", error);
@@ -250,7 +250,7 @@ function ChatPage() {
 
       const messages = res.data.flatMap((item) => [
         { role: "user", content: item.query },
-        { role: "ai", content: item.response }
+        { role: "ai", content: item.response, usage: item.usage }
       ]);
       
       setDbHistory(messages); // 💬 Restore chat history

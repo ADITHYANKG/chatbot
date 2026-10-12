@@ -268,7 +268,7 @@ export default function DbChatBox({dbHistory, setDbHistory,QueryHistoryRef,selec
         { query,mode:"database",session_id:sessionId,database:heading.toLowerCase() },
         { headers: { Authorization: `Bearer ${token}`, "X-OpenRouter-API-Key": localStorage.getItem("openrouter_api_key") || "" } }
       );
-      setDbHistory([...newMessages, { role: "ai", content: response.data.response }]);
+      setDbHistory([...newMessages, { role: "ai", content: response.data.response, usage: response.data.usage }]);
     } catch (error) {
       console.error("Query Error:", error);
       setDbHistory([...newMessages, { role: "error", content: "Error processing your request." }]);

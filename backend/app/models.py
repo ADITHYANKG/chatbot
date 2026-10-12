@@ -65,6 +65,18 @@ class EmailActionToken(Base):
     )
 
 
+class RefreshSession(Base):
+    __tablename__ = "refresh_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    token_digest = Column(String(64), nullable=False, unique=True, index=True)
+    token_version = Column(Integer, nullable=False)
+    expires_at = Column(DateTime, nullable=False, index=True)
+    revoked_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+
 class Image(Base):
     __tablename__="images"
     id=Column(Integer,primary_key=True,index=True)

@@ -1,12 +1,18 @@
-from fastapi import BackgroundTasks, FastAPI, File, UploadFile, Form, Request, HTTPException, Depends
+from fastapi import BackgroundTasks, FastAPI, File, UploadFile, Form, Request, Response, HTTPException, Depends
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine
 from models import User, FileUpload, ChatHistory, Base, Image, DatabaseQuery, PlainChatHistory
-from models import EmailActionToken
+from models import EmailActionToken, RefreshSession
 from auth import create_access_token, get_password_hash, verify_password_and_update, oauth2_scheme
 from email_service import send_email
 from schema_migrations import upgrade_database
-from settings import ADMIN_USERNAMES, FRONTEND_URL, JWT_SECRET_KEY
+from settings import (
+    ADMIN_USERNAMES,
+    FRONTEND_URL,
+    JWT_REFRESH_COOKIE_SECURE,
+    JWT_REFRESH_TOKEN_EXPIRE_DAYS,
+    JWT_SECRET_KEY,
+)
 from file_processor import extract_text_from_file
 from llm_client import query_ollama, connect_ollama_db, disconnect_ollama_db
 from fastapi.middleware.cors import CORSMiddleware
@@ -67,6 +73,53 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+REFRESH_COOKIE_NAME = "refresh_token"
+
+
+def set_refresh_cookie(response: Response, token: str) -> None:
+    response.set_cookie(
+        key=REFRESH_COOKIE_NAME,
+        value=token,
+        max_age=JWT_REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
+        httponly=True,
+        secure=JWT_REFRESH_COOKIE_SECURE,
+        samesite="lax",
+        path="/",
+    )
+
+
+def clear_refresh_cookie(response: Response) -> None:
+    response.delete_cookie(
+        key=REFRESH_COOKIE_NAME,
+        httponly=True,
+        secure=JWT_REFRESH_COOKIE_SECURE,
+        samesite="lax",
+        path="/",
+    )
+
+
+def invalid_refresh_response(response: Response, message: str) -> dict:
+    clear_refresh_cookie(response)
+    response.status_code = 401
+    return {"detail": message}
+
+
+def create_refresh_session(user: User, db: Session) -> str:
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    expires_at = now + timedelta(days=JWT_REFRESH_TOKEN_EXPIRE_DAYS)
+    raw_token = secrets.token_urlsafe(48)
+    db.query(RefreshSession).filter(RefreshSession.expires_at < now).delete(synchronize_session=False)
+    db.add(
+        RefreshSession(
+            user_id=user.id,
+            token_digest=hashlib.sha256(raw_token.encode()).hexdigest(),
+            token_version=user.token_version,
+            expires_at=expires_at,
+        )
+    )
+    return raw_token
 
 
 _RATE_LIMIT_WINDOW_SECONDS = 3600
@@ -254,7 +307,12 @@ def register(
 
 # ✅ User Login
 @app.post("/login/")
-def login(username: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
+def login(
+    response: Response,
+    username: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db),
+):
     user = db.query(User).filter(User.username == username).first()
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -267,12 +325,56 @@ def login(username: str = Form(...), password: str = Form(...), db: Session = De
         db.commit()
 
     access_token = create_access_token(data={"sub": user.username, "ver": user.token_version})
+    refresh_token = create_refresh_session(user, db)
+    db.commit()
+    set_refresh_cookie(response, refresh_token)
     return {
         "access_token": access_token,
         "token_type": "bearer",
         "email": user.email,
         "email_verified": user.email_verified,
     }
+
+
+@app.post("/auth/refresh/")
+def refresh_access_token(request: Request, response: Response, db: Session = Depends(get_db)):
+    raw_token = request.cookies.get(REFRESH_COOKIE_NAME)
+    if not raw_token:
+        return invalid_refresh_response(response, "Refresh session is missing")
+
+    token_digest = hashlib.sha256(raw_token.encode()).hexdigest()
+    refresh_session = db.query(RefreshSession).filter(RefreshSession.token_digest == token_digest).first()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    if not refresh_session or refresh_session.revoked_at or refresh_session.expires_at <= now:
+        return invalid_refresh_response(response, "Refresh session is invalid or expired")
+
+    user = db.query(User).filter(User.id == refresh_session.user_id).first()
+    if not user or user.token_version != refresh_session.token_version:
+        refresh_session.revoked_at = now
+        db.commit()
+        return invalid_refresh_response(response, "Refresh session is invalid or expired")
+
+    refresh_session.expires_at = now + timedelta(days=JWT_REFRESH_TOKEN_EXPIRE_DAYS)
+    access_token = create_access_token(data={"sub": user.username, "ver": user.token_version})
+    db.commit()
+    set_refresh_cookie(response, raw_token)
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+@app.post("/auth/logout/")
+def logout(request: Request, response: Response, db: Session = Depends(get_db)):
+    raw_token = request.cookies.get(REFRESH_COOKIE_NAME)
+    if raw_token:
+        token_digest = hashlib.sha256(raw_token.encode()).hexdigest()
+        refresh_session = db.query(RefreshSession).filter(RefreshSession.token_digest == token_digest).first()
+        if refresh_session and not refresh_session.revoked_at:
+            refresh_session.revoked_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            db.commit()
+
+    clear_refresh_cookie(response)
+    return {"message": "Logged out"}
+
+
 @app.get("/user/")
 def get_user(user: User = Depends(get_authenticated_user)):
     return {

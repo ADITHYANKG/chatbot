@@ -2,7 +2,7 @@ import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, CalendarDays, RefreshCw, Search, ShieldCheck, Trash2, UserCheck, Users } from "lucide-react";
 import { ThemeContext } from "../context/ThemeContext";
-import { API_BASE_URL } from "../services/authApi";
+import { API_BASE_URL, authenticatedFetch } from "../services/authApi";
 
 export default function AdminDashboard() {
   const { darkMode } = useContext(ThemeContext);
@@ -17,7 +17,7 @@ export default function AdminDashboard() {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/users/`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/admin/users/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -47,7 +47,7 @@ export default function AdminDashboard() {
     setDeletingId(user.id);
     setError("");
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/users/${user.id}/`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/admin/users/${user.id}/`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

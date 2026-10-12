@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { ThemeContext } from "../context/ThemeContext";
-import { API_BASE_URL } from "../services/authApi";
+import { API_BASE_URL, authenticatedFetch } from "../services/authApi";
 
 export default function AccountEmail() {
   const { updateAccountEmail, resendAccountEmailVerification, logout } = useContext(AuthContext);
@@ -20,7 +20,7 @@ export default function AccountEmail() {
       navigate("/login", { replace: true });
       return;
     }
-    fetch(`${API_BASE_URL}/user/`, { headers: { Authorization: `Bearer ${token}` } })
+    authenticatedFetch(`${API_BASE_URL}/user/`, { headers: { Authorization: `Bearer ${token}` } })
       .then(async (response) => {
         if (!response.ok) throw new Error("Your session has expired. Please sign in again.");
         return response.json();

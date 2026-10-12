@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-import { API_BASE_URL } from "../services/authApi";
+import { API_BASE_URL, authenticatedFetch } from "../services/authApi";
 
 const ProtectedRoute = ({ children, adminOnly = false }) => {
   const { user } = useContext(AuthContext);
@@ -10,7 +10,7 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
   useEffect(() => {
     if (!user) return;
     let active = true;
-    fetch(`${API_BASE_URL}/user/`, {
+    authenticatedFetch(`${API_BASE_URL}/user/`, {
       headers: { Authorization: `Bearer ${user}` },
     })
       .then(async (response) => {

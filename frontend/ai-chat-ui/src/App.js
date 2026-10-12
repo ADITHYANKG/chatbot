@@ -20,7 +20,7 @@ import QueryHistory from "./components/QueryHistory"
 import NormalChatBox from "./components/NormalChatBox";
 import NormalChatHistory from "./components/NormalChatHistory";
 import { Bot, Database, FileText, Image as ImageIcon, KeyRound, LogOut, Menu, MessageSquare, Moon, Plus, Settings, Shield, Sun } from "lucide-react";
-import { API_BASE_URL } from "./services/authApi";
+import { API_BASE_URL, authenticatedFetch } from "./services/authApi";
 import AdminDashboard from "./pages/AdminDashboard";
 
 const getUsernameFromToken = (token) => {
@@ -77,7 +77,7 @@ function ChatPage() {
 
   useEffect(() => {
     if (!token) return;
-    fetch(`${API_BASE_URL}/user/`, { headers: { Authorization: `Bearer ${token}` } })
+    authenticatedFetch(`${API_BASE_URL}/user/`, { headers: { Authorization: `Bearer ${token}` } })
       .then((response) => response.ok ? response.json() : null)
       .then((account) => setIsAdmin(Boolean(account?.is_admin)))
       .catch(() => setIsAdmin(false));

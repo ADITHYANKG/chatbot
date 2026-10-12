@@ -14,6 +14,10 @@ if not JWT_SECRET_KEY:
     warnings.warn("Using the development-only JWT signing key", RuntimeWarning)
 
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
+JWT_REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("JWT_REFRESH_TOKEN_EXPIRE_DAYS", "30"))
+JWT_REFRESH_COOKIE_SECURE = os.getenv(
+    "JWT_REFRESH_COOKIE_SECURE", "true" if APP_ENV == "production" else "false"
+).lower() == "true"
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000").rstrip("/")
 ADMIN_USERNAMES = {
     username.strip()

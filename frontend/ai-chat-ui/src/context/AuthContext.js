@@ -1,10 +1,16 @@
-import { createContext, useState } from "react";
-import { postAuthForm } from "../services/authApi";
+import { createContext, useCallback, useEffect, useState } from "react";
+import { API_BASE_URL, postAuthForm } from "../services/authApi";
 
 export const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(localStorage.getItem("token") || null);
+
+  useEffect(() => {
+    const syncUser = () => setUser(localStorage.getItem("token") || null);
+    window.addEventListener("auth-token-updated", syncUser);
+    return () => window.removeEventListener("auth-token-updated", syncUser);
+  }, []);
 
   const login = async (username, password) => {
     try {
@@ -26,10 +32,16 @@ export function AuthProvider({ children }) {
   const resendAccountEmailVerification = () =>
     postAuthForm("/account/email/resend/", {}, localStorage.getItem("token"));
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    setUser(null);
-  };
+  const logout = useCallback(async () => {
+    try {
+      await fetch(`${API_BASE_URL}/auth/logout/`, { method: "POST", credentials: "include" });
+    } catch {
+      // Clear local login state even if the server cannot be reached.
+    } finally {
+      localStorage.removeItem("token");
+      setUser(null);
+    }
+  }, []);
 
   return (
     <AuthContext.Provider
